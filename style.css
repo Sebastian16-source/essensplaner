@@ -1,0 +1,446 @@
+:root {
+  --bg: #f5f4ef;
+  --karte: #ffffff;
+  --text: #1d2420;
+  --leise: #66706a;
+  --linie: #e2e0d8;
+  --akzent: #2f7d4f;
+  --akzent-text: #ffffff;
+  --akzent-hell: #e2f0e7;
+  --sport: #b4500f;
+  --sport-hell: #fcecdf;
+  --gefahr: #b42318;
+  --kh: #a87a0a;
+  --kh-hell: #fbf1d6;
+  --radius: 14px;
+  --tabbar-h: 58px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121513;
+    --karte: #1c201e;
+    --text: #e6eae7;
+    --leise: #98a19b;
+    --linie: #2d3330;
+    --akzent: #5bbd85;
+    --akzent-text: #0d1a12;
+    --akzent-hell: #1e3227;
+    --sport: #f59a55;
+    --sport-hell: #382517;
+    --gefahr: #f47066;
+    --kh: #e2b84a;
+    --kh-hell: #352c14;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, sans-serif;
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 16px);
+  -webkit-tap-highlight-color: transparent;
+}
+body.modal-offen { overflow: hidden; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+h1, h2, h3 { margin: 0; line-height: 1.25; }
+h2 { font-size: 1.1rem; }
+h3 { font-size: 1rem; }
+
+/* ---------- Kopf & Navigation ---------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 10px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--linie);
+}
+.topbar h1 { font-size: 1.35rem; max-width: 720px; margin: 0 auto; }
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px max(16px, env(safe-area-inset-left, 0px)) 24px max(16px, env(safe-area-inset-right, 0px));
+}
+
+.tabbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: color-mix(in srgb, var(--karte) 92%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--linie);
+}
+.tabbar button {
+  height: var(--tabbar-h);
+  border: 0;
+  background: none;
+  color: var(--leise);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0.72rem;
+}
+.tabbar svg {
+  width: 24px; height: 24px;
+  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.tabbar button.aktiv { color: var(--akzent); font-weight: 600; }
+
+/* ---------- Bausteine ---------- */
+
+.karte {
+  background: var(--karte);
+  border: 1px solid var(--linie);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.karte h2 { margin-bottom: 6px; }
+
+.hinweis { color: var(--leise); font-size: 0.9rem; margin: 4px 0 10px; }
+.leer-hinweis { color: var(--leise); text-align: center; padding: 24px 8px; }
+.label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--leise); font-weight: 600; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--linie);
+  background: var(--karte);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.btn.primaer { background: var(--akzent); border-color: var(--akzent); color: var(--akzent-text); }
+.btn.gefahr { color: var(--gefahr); }
+.btn.scharf { background: var(--gefahr); border-color: var(--gefahr); color: #fff; }
+
+.icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--leise);
+  flex: none;
+}
+.icon-btn.klein { width: 32px; height: 32px; font-size: 1.3rem; }
+
+.link-btn { border: 0; background: none; color: var(--akzent); font-weight: 500; padding: 6px; }
+.zentriert { display: block; margin: -4px auto 8px; }
+
+.aktionen { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 8px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.chips.scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.chip {
+  border: 1px solid var(--linie);
+  background: var(--karte);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.chip.an { background: var(--akzent-hell); border-color: var(--akzent); color: var(--akzent); font-weight: 600; }
+
+.chip-check input { position: absolute; opacity: 0; pointer-events: none; }
+.chip-check span {
+  display: inline-block;
+  border: 1px solid var(--linie);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: var(--karte);
+}
+.chip-check input:checked + span { background: var(--sport-hell); border-color: var(--sport); color: var(--sport); font-weight: 600; }
+
+.badge { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.badge.sport { background: var(--sport-hell); color: var(--sport); }
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--linie);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.stepper button { border: 0; background: none; width: 32px; height: 30px; font-size: 1.1rem; color: var(--akzent); }
+.stepper span { font-size: 0.85rem; min-width: 56px; text-align: center; }
+
+input:not([type=checkbox]), select, textarea {
+  width: 100%;
+  font-size: 16px; /* verhindert Zoom auf iOS */
+  padding: 10px 12px;
+  border: 1px solid var(--linie);
+  border-radius: 10px;
+  background: var(--karte);
+}
+textarea { resize: vertical; line-height: 1.4; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--akzent); outline-offset: -1px; }
+input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--akzent); flex: none; margin: 0; }
+
+.suche { margin-bottom: 4px; }
+.leiste { display: flex; gap: 8px; }
+.leiste .suche { flex: 1; min-width: 0; margin: 0; }
+.leiste .btn { flex: none; }
+
+.liste { padding-left: 20px; margin: 8px 0; }
+.liste li { margin-bottom: 6px; }
+details summary { cursor: pointer; color: var(--akzent); font-weight: 500; margin-top: 8px; }
+
+/* ---------- Wochenplan ---------- */
+
+.periodennav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.periodennav-mitte { display: flex; flex-direction: column; align-items: center; }
+.periodennav-mitte span { color: var(--leise); font-size: 0.88rem; }
+
+.fruehstueck p { margin: 4px 0 0; font-size: 0.92rem; }
+
+.tag {
+  background: var(--karte);
+  border: 1px solid var(--linie);
+  border-radius: var(--radius);
+  padding: 10px 12px 4px;
+  margin-bottom: 10px;
+}
+.tag.heute { border-color: var(--akzent); box-shadow: 0 0 0 1px var(--akzent); }
+.tag-kopf { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.tag-name { font-weight: 700; }
+.tag-datum { color: var(--leise); font-size: 0.88rem; }
+.tag-kopf .badge { margin-left: auto; }
+
+.slot {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--linie);
+}
+.slot-label { width: 52px; flex: none; font-size: 0.78rem; color: var(--leise); padding-top: 3px; }
+.slot-inhalt { flex: 1; min-width: 0; }
+.slot-titel {
+  display: block;
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text);
+}
+.slot-titel.frei { font-weight: 500; font-style: italic; }
+.slot.reste .slot-titel { font-weight: 500; }
+.slot-meta { font-size: 0.8rem; color: var(--leise); }
+.slot-steuerung { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 6px; }
+.slot-add {
+  flex: 1;
+  text-align: left;
+  border: 1px dashed var(--linie);
+  background: none;
+  border-radius: 10px;
+  padding: 7px 10px;
+  color: var(--akzent);
+  font-weight: 500;
+}
+
+/* ---------- Rezepte ---------- */
+
+.rezept-liste { display: flex; flex-direction: column; gap: 6px; }
+.rezept-zeile, .option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--linie);
+  background: var(--karte);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.rz-name { font-weight: 600; }
+.rz-meta { font-size: 0.82rem; color: var(--leise); margin: 0; }
+.option { margin-bottom: 8px; }
+.option small { color: var(--leise); }
+
+.detail-portionen { display: flex; align-items: center; gap: 10px; margin: 12px 0 6px; }
+.zutaten { padding-left: 20px; margin: 6px 0 16px; }
+.zutaten li { margin-bottom: 3px; }
+.schritte { padding-left: 22px; margin: 8px 0; }
+.schritte li { margin-bottom: 8px; }
+
+.formular { display: flex; flex-direction: column; gap: 12px; }
+.formular label { display: flex; flex-direction: column; gap: 4px; font-weight: 500; font-size: 0.92rem; }
+.formular small { font-weight: 400; color: var(--leise); }
+.zwei-spalten { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vorschau { list-style: none; padding: 0; margin: -4px 0 0; font-size: 0.85rem; }
+.vorschau li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.vorschau .kat { color: var(--leise); }
+.vorschau .kat.neu { color: var(--sport); }
+
+.badge.eiweiss { background: var(--akzent-hell); color: var(--akzent); }
+.badge.ballast { background: var(--kh-hell); color: var(--kh); }
+
+.naehrwerte { margin: 10px 0 4px; }
+.nw-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+.nw-kopf .label { margin-right: auto; }
+.nw-kacheln { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; text-align: center; }
+.nw-kacheln div { display: flex; flex-direction: column; }
+.nw-kacheln strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nw-kacheln span { font-size: 0.72rem; color: var(--leise); }
+.nw-balken { display: flex; height: 8px; border-radius: 999px; overflow: hidden; margin: 12px 0 6px; background: var(--linie); }
+.nw-balken span { display: block; }
+.nw-balken .e, .nw-legende .e::before { background: var(--akzent); }
+.nw-balken .k, .nw-legende .k::before { background: var(--kh); }
+.nw-balken .f, .nw-legende .f::before { background: var(--sport); }
+.nw-legende { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.78rem; color: var(--leise); }
+.nw-legende span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+
+.tag-summe { border-top: 1px solid var(--linie); padding: 7px 0 6px; font-size: 0.8rem; color: var(--leise); }
+.tag-summe strong { color: var(--akzent); font-weight: 600; }
+
+/* ---------- Haltbarkeit & Reste ---------- */
+
+.warnung {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--sport);
+  background: var(--sport-hell);
+  border-radius: 8px;
+  padding: 5px 8px;
+}
+.bald { color: var(--sport); }
+.abgelaufen { color: var(--gefahr); }
+
+.bald-karte { border-color: var(--sport); }
+.reste-liste { list-style: none; padding: 0; margin: 6px 0 0; }
+.reste-liste li { padding: 6px 0; border-top: 1px solid var(--linie); }
+.reste-liste li:first-child { border-top: 0; }
+.reste-liste .chips { margin: 6px 0 2px; }
+
+.abschnitt { margin: 20px 0 4px; }
+.feld { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+
+.blick { list-style: none; padding: 0; margin: 8px 0; }
+.blick li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; padding: 8px 0; border-top: 1px solid var(--linie); }
+.blick li:first-child { border-top: 0; }
+.blick-text { flex: 1 1 140px; min-width: 0; display: flex; flex-direction: column; }
+.blick-status { font-size: 0.8rem; color: var(--leise); }
+.blick li.bald .blick-status { color: var(--sport); font-weight: 600; }
+.blick li.abgelaufen .blick-status { color: var(--gefahr); font-weight: 600; }
+.blick input[type=date] { width: auto; padding: 6px 8px; }
+.btn.klein { min-height: 34px; padding: 4px 10px; font-size: 0.85rem; }
+.blick-form { flex-wrap: wrap; }
+.blick-form input[name=text] { flex: 1 1 160px; min-width: 0; }
+.blick-form input[type=date] { flex: 0 1 160px; width: auto; }
+
+/* ---------- Einkauf & Vorrat ---------- */
+
+.einkauf-optionen { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 12px; }
+.einkauf-optionen > label:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--leise); }
+.schalter { display: flex; align-items: center; gap: 8px; min-height: 44px; white-space: nowrap; }
+
+.export { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.export-knoepfe { display: flex; gap: 8px; }
+
+.kat-titel { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--leise); margin: 18px 0 6px; }
+
+.einkauf, .vorrat {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--karte);
+  border: 1px solid var(--linie);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.einkauf:empty { display: none; }
+.einkauf li, .vorrat li { border-top: 1px solid var(--linie); }
+.einkauf li:first-child, .vorrat li:first-child { border-top: 0; }
+
+.check-zeile { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 48px; flex: 1; min-width: 0; }
+.ez-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ez-name { font-weight: 500; }
+.ez-quelle { font-size: 0.78rem; color: var(--leise); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ez-menge { font-variant-numeric: tabular-nums; color: var(--leise); white-space: nowrap; font-size: 0.92rem; }
+.erledigt .ez-name, .erledigt .ez-menge { text-decoration: line-through; color: var(--leise); }
+.erledigt { opacity: 0.6; }
+
+.zeilen-form { display: flex; gap: 8px; margin-top: 10px; }
+
+.vorrat li { display: flex; align-items: center; gap: 8px; padding-right: 12px; }
+.vorrat .menge-input { width: 84px; padding: 6px 8px; text-align: right; }
+.vorrat .menge-input:disabled { opacity: 0.35; }
+.vorrat .einheit { width: 44px; font-size: 0.82rem; color: var(--leise); }
+
+.vorrat-check ul { list-style: none; padding: 0; margin: 10px 0 0; }
+.vorrat-check li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 0.92rem; }
+
+/* ---------- Modal & Toast ---------- */
+
+#modal { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+.modal-hintergrund { position: absolute; inset: 0; background: rgb(0 0 0 / 0.4); }
+.modal-blatt {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  max-height: 88vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg);
+  border-radius: 18px 18px 0 0;
+  padding: 6px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 700px) {
+  #modal { align-items: center; }
+  .modal-blatt { border-radius: 18px; max-height: 84vh; }
+}
+.sheet-kopf {
+  position: sticky;
+  top: -6px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 0 8px;
+  background: var(--bg);
+}
+
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 14px);
+  transform: translateX(-50%);
+  z-index: 50;
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  max-width: calc(100% - 32px);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.2);
+}
+
+[hidden] { display: none !important; }
