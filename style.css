@@ -317,8 +317,26 @@ details summary { cursor: pointer; color: var(--akzent); font-weight: 500; margi
 .nw-legende { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.78rem; color: var(--leise); }
 .nw-legende span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
 
-.tag-summe { border-top: 1px solid var(--linie); padding: 7px 0 6px; font-size: 0.8rem; color: var(--leise); }
-.tag-summe strong { color: var(--akzent); font-weight: 600; }
+.tag-summe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  border-top: 1px solid var(--linie);
+  padding: 7px 0 6px;
+  font-size: 0.8rem;
+  color: var(--leise);
+}
+.ziel { font-weight: 600; border-radius: 999px; padding: 1px 8px; font-variant-numeric: tabular-nums; background: var(--linie); }
+.ziel.ok { background: var(--akzent-hell); color: var(--akzent); }
+.ziel.unter, .ziel.ueber { background: var(--sport-hell); color: var(--sport); }
+
+.fruehstueck p { margin: 4px 0 0; }
+.btn.wuerfel { width: 100%; margin-bottom: 10px; }
+
+.zahlen-raster { display: grid; grid-template-columns: auto 90px auto 90px; align-items: center; gap: 8px 10px; }
+.zahlen-raster .menge-input { width: 90px; padding: 6px 8px; text-align: right; }
+.zahlen-raster.zwei { grid-template-columns: 1fr 90px; }
 
 /* ---------- Haltbarkeit & Reste ---------- */
 

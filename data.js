@@ -224,7 +224,7 @@ const STANDARD_REZEPTE = [
     id: "linsen-bolognese", name: "Linsen-Bolognese", minuten: 25, portionen: 2,
     tags: ["Pasta", "Sport"],
     zutaten: ["1 Zwiebeln", "2 Zehe Knoblauch", "200 g Karotten", "1 EL Olivenöl", "1 EL Tomatenmark",
-      "120 g Rote Linsen", "500 g Passierte Tomaten", "1 TL Italienische Kräuter", "200 g Vollkornspaghetti", "30 g Parmesan"],
+      "120 g Rote Linsen", "500 g Passierte Tomaten", "1 TL Italienische Kräuter", "Beilage: Vollkornspaghetti", "30 g Parmesan"],
     schritte: ["Zwiebel und Knoblauch hacken, Karotten fein reiben, alles in Öl anbraten.",
       "Tomatenmark kurz mitrösten, Linsen, passierte Tomaten und 200 ml Wasser dazugeben.",
       "15 Min köcheln lassen, mit Kräutern, Salz und Pfeffer abschmecken.",
@@ -253,9 +253,9 @@ const STANDARD_REZEPTE = [
   {
     id: "couscous-salat", name: "Couscous-Salat mit Kichererbsen", minuten: 15, portionen: 2,
     tags: ["Schnell", "Kalt"],
-    zutaten: ["120 g Couscous", "1 TL Gemüsebrühe", "1 Dose Kichererbsen", "½ Gurke", "100 g Feta",
+    zutaten: ["Beilage: Couscous", "1 TL Gemüsebrühe", "1 Dose Kichererbsen", "½ Gurke", "100 g Feta",
       "1 Zitrone", "2 EL Olivenöl", "1 EL TK-Kräuter"],
-    schritte: ["Couscous mit 250 ml heißer Brühe übergießen und 5 Min quellen lassen.",
+    schritte: ["Couscous mit etwas mehr heißer Brühe übergießen (ca. 1,25-fache Menge), 5 Min quellen lassen.",
       "Gurke würfeln, Kichererbsen abgießen, Feta zerbröseln.",
       "Alles mit Zitronensaft, Öl und Kräutern mischen, abschmecken. Schmeckt auch kalt am nächsten Tag."],
   },
@@ -263,7 +263,7 @@ const STANDARD_REZEPTE = [
     id: "tofu-pfanne", name: "Tofu-Gemüsepfanne mit Erdnusssauce", minuten: 20, portionen: 2,
     tags: ["Pfanne", "Reis", "Sport"],
     zutaten: ["400 g Tofu natur", "1 EL Rapsöl", "750 g TK-Gemüsemischung", "2 EL Erdnussbutter",
-      "3 EL Sojasauce", "1 Zehe Knoblauch", "150 g Reis"],
+      "3 EL Sojasauce", "1 Zehe Knoblauch", "Beilage: Reis"],
     schritte: ["Reis kochen.",
       "Tofu würfeln und in Öl knusprig braten.",
       "TK-Gemüse dazugeben und mitbraten, bis es gar ist.",
@@ -282,7 +282,7 @@ const STANDARD_REZEPTE = [
     id: "linsen-kokos-curry", name: "Rotes Linsen-Kokos-Curry mit Spinat", minuten: 25, portionen: 2,
     tags: ["Curry", "Reis", "Sport"],
     zutaten: ["1 Zwiebeln", "1 EL Rapsöl", "2 TL Currypulver", "150 g Rote Linsen", "1 Dose Kokosmilch",
-      "1 Dose Stückige Tomaten", "225 g TK-Blattspinat", "150 g Reis"],
+      "1 Dose Stückige Tomaten", "225 g TK-Blattspinat", "Beilage: Reis"],
     schritte: ["Reis kochen.",
       "Zwiebel würfeln und in Öl anbraten, Currypulver kurz mitrösten.",
       "Linsen, Kokosmilch, Tomaten und 200 ml Wasser dazu, 15 Min köcheln.",
@@ -302,7 +302,7 @@ const STANDARD_REZEPTE = [
     tags: ["Reis", "Sport"],
     zutaten: ["1 Zwiebeln", "1 Paprika", "1 EL Rapsöl", "1 TL Paprikapulver", "1 TL Kreuzkümmel",
       "1 Prise Chiliflocken", "2 Dose Stückige Tomaten", "2 Dose Kidneybohnen", "1 Dose Mais",
-      "80 g Rote Linsen", "200 g Reis"],
+      "80 g Rote Linsen", "Beilage: Reis"],
     schritte: ["Reis kochen.",
       "Zwiebel und Paprika würfeln und in Öl anbraten, Gewürze kurz mitrösten.",
       "Tomaten, abgespülte Bohnen, Mais, Linsen und 200 ml Wasser dazu, 20 Min köcheln.",
@@ -311,7 +311,7 @@ const STANDARD_REZEPTE = [
   {
     id: "pasta-brokkoli-feta", name: "Vollkornpasta mit Brokkoli, Erbsen und Feta", minuten: 20, portionen: 2,
     tags: ["Pasta", "Schnell", "Sport"],
-    zutaten: ["200 g Vollkornpenne", "1 Stk Brokkoli", "150 g TK-Erbsen", "150 g Feta", "1 Zitrone",
+    zutaten: ["Beilage: Vollkornpenne", "1 Stk Brokkoli", "150 g TK-Erbsen", "150 g Feta", "1 Zitrone",
       "1 Zehe Knoblauch", "1 EL Olivenöl"],
     schritte: ["Nudeln kochen, in den letzten 5 Min Brokkoli-Röschen und Erbsen mitkochen.",
       "Eine Tasse Nudelwasser abnehmen, dann abgießen.",
@@ -331,7 +331,7 @@ const STANDARD_REZEPTE = [
     id: "kichererbsen-curry", name: "Kichererbsen-Spinat-Curry", minuten: 20, portionen: 2,
     tags: ["Curry", "Reis", "Sport"],
     zutaten: ["1 Zwiebeln", "1 Zehe Knoblauch", "1 EL Rapsöl", "2 TL Currypulver", "2 Dose Kichererbsen",
-      "1 Dose Kokosmilch", "1 Dose Stückige Tomaten", "225 g TK-Blattspinat", "150 g Reis"],
+      "1 Dose Kokosmilch", "1 Dose Stückige Tomaten", "225 g TK-Blattspinat", "Beilage: Reis"],
     schritte: ["Reis kochen.",
       "Zwiebel und Knoblauch in Öl anbraten, Currypulver kurz mitrösten.",
       "Kichererbsen, Kokosmilch und Tomaten dazu, 10 Min köcheln.",
@@ -371,7 +371,7 @@ const STANDARD_REZEPTE = [
     id: "erdnuss-nudeln", name: "Erdnuss-Nudeln mit Tofu", minuten: 20, portionen: 2,
     tags: ["Pasta", "Pfanne", "Sport"],
     zutaten: ["400 g Tofu natur", "1 EL Rapsöl", "1 Paprika", "150 g Karotten", "½ Bund Frühlingszwiebeln",
-      "200 g Vollkornspaghetti", "2 EL Erdnussbutter", "3 EL Sojasauce", "1 Zehe Knoblauch"],
+      "Beilage: Vollkornspaghetti", "2 EL Erdnussbutter", "3 EL Sojasauce", "1 Zehe Knoblauch"],
     schritte: ["Spaghetti kochen.",
       "Tofu würfeln und knusprig braten, Paprika, Karotten (in Streifen) und Frühlingszwiebeln kurz mitbraten.",
       "Erdnussbutter, Sojasauce, Knoblauch und etwas Nudelwasser verrühren.",
@@ -380,7 +380,7 @@ const STANDARD_REZEPTE = [
   {
     id: "ofenkartoffeln", name: "Ofenkartoffeln mit Kräuterquark und Spiegelei", minuten: 45, portionen: 2,
     tags: ["Ofen", "Eier"],
-    zutaten: ["800 g Kartoffeln", "2 EL Rapsöl", "1 TL Paprikapulver", "1 Stk Brokkoli", "250 g Magerquark",
+    zutaten: ["Beilage: Kartoffeln", "2 EL Rapsöl", "1 TL Paprikapulver", "1 Stk Brokkoli", "250 g Magerquark",
       "1 EL TK-Kräuter", "2 Eier"],
     schritte: ["Ofen auf 200 °C vorheizen.",
       "Kartoffeln in Spalten schneiden, mit Öl, Paprikapulver und Salz mischen, 35 Min backen.",
@@ -400,7 +400,7 @@ const STANDARD_REZEPTE = [
   {
     id: "gebratener-reis", name: "Gebratener Reis mit Ei und Gemüse", minuten: 15, portionen: 2,
     tags: ["Reis", "Pfanne", "Schnell", "Eier"],
-    zutaten: ["150 g Reis", "1 EL Rapsöl", "150 g TK-Erbsen", "150 g Karotten", "½ Bund Frühlingszwiebeln",
+    zutaten: ["Beilage: Reis", "1 EL Rapsöl", "150 g TK-Erbsen", "150 g Karotten", "½ Bund Frühlingszwiebeln",
       "4 Eier", "2 EL Sojasauce"],
     schritte: ["Am besten Reis vom Vortag nehmen (sonst kochen und auskühlen lassen).",
       "Karotten würfeln, mit Erbsen und Frühlingszwiebeln in Öl anbraten.",
@@ -429,7 +429,7 @@ const STANDARD_REZEPTE = [
   {
     id: "nudelauflauf", name: "Vollkorn-Nudelauflauf mit Zucchini", minuten: 40, portionen: 2,
     tags: ["Ofen", "Pasta", "Sport"],
-    zutaten: ["200 g Vollkornpenne", "1 Zwiebeln", "1 Zucchini", "1 Paprika", "500 g Passierte Tomaten",
+    zutaten: ["Beilage: Vollkornpenne", "1 Zwiebeln", "1 Zucchini", "1 Paprika", "500 g Passierte Tomaten",
       "1 TL Italienische Kräuter", "1 Kugel Mozzarella", "50 g Geriebener Käse"],
     schritte: ["Ofen auf 200 °C vorheizen, Nudeln knapp gar kochen.",
       "Zwiebel, Zucchini und Paprika würfeln, mit Nudeln, passierten Tomaten und Kräutern mischen.",
@@ -439,19 +439,19 @@ const STANDARD_REZEPTE = [
   {
     id: "mex-reispfanne", name: "Mexikanische Reispfanne", minuten: 20, portionen: 2,
     tags: ["Reis", "Pfanne", "Sport"],
-    zutaten: ["1 Zwiebeln", "1 Paprika", "1 EL Rapsöl", "150 g Reis", "1 Dose Stückige Tomaten",
+    zutaten: ["1 Zwiebeln", "1 Paprika", "1 EL Rapsöl", "Beilage: Reis", "1 Dose Stückige Tomaten",
       "1 TL Gemüsebrühe", "1 TL Paprikapulver", "1 TL Kreuzkümmel", "1 Dose Kidneybohnen", "1 Dose Mais",
       "100 g Geriebener Käse"],
     schritte: ["Zwiebel und Paprika in Öl anbraten.",
-      "Reis, Tomaten, 350 ml Brühe und Gewürze dazu, mit Deckel 18 Min köcheln.",
+      "Reis, Tomaten, Gewürze und gut doppelt so viel Brühe wie Reis dazu, mit Deckel 18 Min köcheln.",
       "Bohnen und Mais unterheben, Käse drüberstreuen und schmelzen lassen."],
   },
   {
     id: "kichererbsen-pfanne", name: "Kichererbsen-Gemüse-Pfanne mit Couscous", minuten: 20, portionen: 2,
     tags: ["Pfanne", "Schnell"],
     zutaten: ["1 Zucchini", "1 Paprika", "1 EL Olivenöl", "2 Dose Kichererbsen", "1 TL Kreuzkümmel",
-      "1 Zehe Knoblauch", "120 g Couscous", "1 TL Gemüsebrühe", "150 g Naturjoghurt"],
-    schritte: ["Couscous mit 250 ml heißer Brühe übergießen und quellen lassen.",
+      "1 Zehe Knoblauch", "Beilage: Couscous", "1 TL Gemüsebrühe", "150 g Naturjoghurt"],
+    schritte: ["Couscous mit etwas mehr heißer Brühe übergießen (ca. 1,25-fache Menge) und quellen lassen.",
       "Zucchini und Paprika würfeln und in Öl anbraten.",
       "Kichererbsen, Knoblauch und Kreuzkümmel dazu, 5 Min mitbraten.",
       "Mit Couscous und Joghurt servieren."],
@@ -468,7 +468,7 @@ const STANDARD_REZEPTE = [
   {
     id: "kohl-kartoffel-pfanne", name: "Kohl-Kartoffel-Pfanne mit Räuchertofu", minuten: 20, portionen: 2,
     tags: ["Pfanne"],
-    zutaten: ["500 g Kartoffeln", "2 EL Rapsöl", "1 Zwiebeln", "½ Spitzkohl", "400 g Räuchertofu",
+    zutaten: ["Beilage: Kartoffeln", "2 EL Rapsöl", "1 Zwiebeln", "½ Spitzkohl", "400 g Räuchertofu",
       "1 TL Kümmel"],
     schritte: ["Kartoffeln würfeln und in Öl ca. 10 Min braten.",
       "Zwiebel, Kohl in Streifen und gewürfelten Räuchertofu dazu, 10 Min mitbraten.",
@@ -477,7 +477,7 @@ const STANDARD_REZEPTE = [
   {
     id: "kichererbsen-bowl", name: "Bowl mit Ofen-Kichererbsen", minuten: 30, portionen: 2,
     tags: ["Ofen", "Reis"],
-    zutaten: ["2 Dose Kichererbsen", "2 EL Rapsöl", "1 TL Paprikapulver", "150 g Reis", "¼ Rotkohl",
+    zutaten: ["2 Dose Kichererbsen", "2 EL Rapsöl", "1 TL Paprikapulver", "Beilage: Reis", "¼ Rotkohl",
       "150 g Karotten", "½ Gurke", "200 g Naturjoghurt", "½ Zitrone"],
     schritte: ["Ofen auf 200 °C vorheizen, Reis kochen.",
       "Kichererbsen abtrocknen, mit Öl, Paprika und Salz 25 Min rösten.",
@@ -543,19 +543,29 @@ const SPORT_TIPPS = [
 const STANDARD_EINSTELLUNGEN = {
   fruehstueck: "Overnight Oats oder Quark mit Haferflocken, Obst, Leinsamen und Walnüssen – " +
     "alternativ Vollkornbrot mit Ei oder Kräuterquark und Rohkost.",
+  // Mengen für einen typischen Tag – zählen in die Tagessumme und (× 7) in die Einkaufsliste.
+  fruehstueckZutaten: ["80 g Haferflocken", "200 ml Milch", "140 g Skyr", "1 Apfel", "10 g Leinsamen", "15 g Walnüsse"],
+  snack: ["250 g Magerquark", "1 Banane"], // täglicher Eiweiß-Snack
+  training: ["1 Banane"],                  // vor dem Training, nur an Sporttagen
   sporttage: [0, 2, 4], // Mo, Mi, Fr (0 = Montag)
   einkaufstag: 0, // Großeinkauf für die Woche (0 = Montag, 5 = Samstag vor der Woche)
-  // Was jede Woche für Frühstück und Snacks gekauft wird (gleiches Format wie Rezeptzutaten).
+  // Beilagen pro Portion (roh). Rezepte mit "Beilage: Reis" usw. nehmen diese Mengen.
+  beilagen: { nudeln: 150, reis: 120, couscous: 120, kartoffeln: 500, sportZuschlag: 25 },
+  // Tagesziel, grob geschätzt für einen aktiven Mann Anfang 20 mit Kraftsport
+  ziele: { kcal: [2600, 3000], eiweiss: [100, 120] },
+  // Was sonst jede Woche gekauft wird (gleiches Format wie Rezeptzutaten).
   basics: [
     "1 Stk Vollkornbrot",
     "6 Eier",
-    "500 g Magerquark",
-    "500 g Skyr",
     "500 g Naturjoghurt",
-    "1 l Milch",
-    "1 kg Äpfel",
-    "6 Bananen",
     "500 g Karotten",
+    "1 Gurke",
   ],
   kurzbefehl: "Einkauf importieren",
 };
+
+// Frühere Standard-Basics – wer sie nie geändert hat, bekommt beim Update die neuen
+const ALTE_STANDARD_BASICS = [
+  "1 Stk Vollkornbrot", "6 Eier", "500 g Magerquark", "500 g Skyr", "500 g Naturjoghurt",
+  "1 l Milch", "1 kg Äpfel", "6 Bananen", "500 g Karotten",
+];

@@ -87,9 +87,12 @@ function parseZahl(s) {
 }
 
 // "120 g Rote Linsen" -> { menge: 120, einheit: "g", name: "Rote Linsen" }
+// "Beilage: Reis" -> Menge kommt aus den Einstellungen (siehe zutatenFuer)
 function parseZutat(zeile) {
   const t = String(zeile).trim();
   if (!t) return null;
+  const beilage = t.match(/^beilage:\s*(.+)$/i);
+  if (beilage) return { menge: null, einheit: "g", name: kanonischerName(beilage[1]), beilage: true };
   let menge = null, rest = t;
   const m = t.match(/^(\d+(?:[.,]\d+)?\s?[½¼¾⅓⅔]?|[½¼¾⅓⅔]|\d+\/\d+)\s+(.+)$/);
   if (m) { menge = parseZahl(m[1]); rest = m[2]; }
@@ -132,6 +135,37 @@ function fmtZutat(p, faktor = 1) {
 const kategorie = (name) => (KATALOG[name] ? KATALOG[name][0] : "Sonstiges");
 const einheitLabel = (e) => (e === "Stk" ? "Stück" : e);
 
+// ================= Beilagen & Alltag =================
+
+const BEILAGE_ART = { Vollkornspaghetti: "nudeln", Vollkornpenne: "nudeln", Reis: "reis", Couscous: "couscous", Kartoffeln: "kartoffeln" };
+const beilageProPortion = (name) => state.einstellungen.beilagen[BEILAGE_ART[name] || "reis"];
+const istSporttag = (datum) => state.einstellungen.sporttage.includes(wochentag(datum));
+
+// Zutaten eines Rezepts für eine Portionenzahl. Beilagen kommen aus den Einstellungen,
+// an Sporttagen gibt es abends für die eine Portion, die man isst, etwas mehr.
+function zutatenFuer(r, portionen, sportAbend = false) {
+  const zuschlag = sportAbend ? state.einstellungen.beilagen.sportZuschlag / 100 : 0;
+  return r.zutaten.map(parseZutat).filter(Boolean).map((p) => {
+    if (p.beilage) return { ...p, menge: beilageProPortion(p.name) * (portionen + zuschlag) };
+    return p.menge == null ? p : { ...p, menge: (p.menge * portionen) / r.portionen };
+  });
+}
+
+// Was außer Mittag und Abend jeden Tag dazukommt: [Quelle, Zutatenzeilen]
+function alltagsPosten(datum) {
+  const e = state.einstellungen;
+  return [
+    ["Frühstück", e.fruehstueckZutaten],
+    ["Eiweiß-Snack", e.snack],
+    ...(istSporttag(datum) ? [["Vor dem Training", e.training]] : []),
+  ];
+}
+const ALLTAG_QUELLEN = new Set(["Frühstück", "Eiweiß-Snack", "Vor dem Training", "Wochen-Basics"]);
+const alltagsZeilen = () => {
+  const e = state.einstellungen;
+  return [...e.fruehstueckZutaten, ...e.snack, ...e.training, ...e.basics];
+};
+
 // ================= Nährwerte =================
 
 // Grenzwerte wie bei EU-Lebensmittelangaben (VO 1924/2006):
@@ -144,20 +178,22 @@ const zutatGramm = (p) => {
   return nw ? p.menge * (nw[p.einheit] ?? EINHEIT_GRAMM[p.einheit] ?? 0) : 0;
 };
 
-// Nährwerte pro Portion; Zutaten ohne hinterlegte Werte werden in "fehlend" gesammelt
-function naehrwerte(r) {
+// Nährwerte einer Zutatenliste; Zutaten ohne hinterlegte Werte werden in "fehlend" gesammelt
+function naehrwerteListe(zutaten) {
   const summe = [0, 0, 0, 0, 0];
   const fehlend = [];
-  for (const z of r.zutaten) {
-    const p = parseZutat(z);
+  for (const p of zutaten) {
     if (!p || p.menge == null) continue;
     const g = zutatGramm(p);
     if (!g) { fehlend.push(p.name); continue; }
     NAEHRWERTE[p.name].n.forEach((v, i) => { summe[i] += (v * g) / 100; });
   }
-  const [kcal, eiweiss, kh, fett, ballast] = summe.map((v) => v / r.portionen);
+  const [kcal, eiweiss, kh, fett, ballast] = summe;
   return { kcal, eiweiss, kh, fett, ballast, fehlend };
 }
+
+// Nährwerte pro Portion
+const naehrwerte = (r, sportAbend = false) => naehrwerteListe(zutatenFuer(r, 1, sportAbend));
 
 const zahlDe = (x) => Math.round(x).toLocaleString("de-DE");
 const nwKurz = (nw) => `${zahlDe(nw.kcal)} kcal · ${zahlDe(nw.eiweiss)} g Eiweiß`;
@@ -169,19 +205,25 @@ function nwBadges(nw) {
   ].join("");
 }
 
-// Summe aller Gerichte eines Tages (je Mahlzeit eine Portion, Reste zählen mit)
+// Tagessumme: Mittag und Abend (je eine Portion, Reste zählen mit) plus Frühstück, Snack und Training
 function tagesNaehrwerte(datum) {
   const s = { kcal: 0, eiweiss: 0, kh: 0, fett: 0, ballast: 0, mahlzeiten: 0 };
+  const plus = (nw) => { for (const k of ["kcal", "eiweiss", "kh", "fett", "ballast"]) s[k] += nw[k]; };
   for (const slot of ["m", "a"]) {
     const e = slotGet(datum, slot);
     const r = (e?.typ === "rezept" || e?.typ === "reste") && rezept(e.id);
     if (!r) continue;
-    const nw = naehrwerte(r);
-    for (const k of ["kcal", "eiweiss", "kh", "fett", "ballast"]) s[k] += nw[k];
+    plus(naehrwerte(r, e.typ === "rezept" && slot === "a" && istSporttag(datum)));
     s.mahlzeiten++;
   }
+  for (const [, zeilen] of alltagsPosten(datum)) plus(naehrwerteListe(zeilen.map(parseZutat)));
   return s;
 }
+
+// Liegt ein Wert unter, im oder über dem Zielbereich [min, max]?
+// Beim Eiweiß zählt nur die Untergrenze – mehr ist für Kraftsport kein Problem.
+const zielStatus = (wert, [min, max], nurMinimum = false) =>
+  (wert < min ? "unter" : wert > max && !nurMinimum ? "ueber" : "ok");
 
 // ================= Zustand =================
 
@@ -191,6 +233,7 @@ function neuerState() {
   const vorrat = {};
   for (const [name, [, grund]] of Object.entries(KATALOG)) if (grund) vorrat[name] = { menge: null, einheit: null };
   return {
+    version: 2,
     rezepte: clone(STANDARD_REZEPTE),
     geloeschteStandard: [],
     plan: {},           // "2026-10-06": { m: Eintrag, a: Eintrag }
@@ -209,10 +252,22 @@ function laden(roh) {
   try { s = JSON.parse(roh ?? localStorage.getItem(SPEICHER_KEY)); } catch { s = null; }
   const basis = neuerState();
   if (!s || typeof s !== "object" || !Array.isArray(s.rezepte)) return basis;
+  const alteVersion = s.version || 1;
   for (const k of Object.keys(basis)) if (s[k] == null) s[k] = basis[k];
   s.einstellungen = { ...basis.einstellungen, ...s.einstellungen };
   s.einkauf = { ...basis.einkauf, ...s.einkauf };
-  // Neu hinzugekommene Standardrezepte ergänzen (gelöschte bleiben weg)
+  // Update auf Version 2: unveränderte alte Basics durch die neuen ersetzen
+  // (Quark, Skyr, Milch, Obst stecken jetzt in Frühstück und Snack)
+  if (alteVersion < 2) {
+    if (JSON.stringify(s.einstellungen.basics) === JSON.stringify(ALTE_STANDARD_BASICS)) {
+      s.einstellungen.basics = clone(STANDARD_EINSTELLUNGEN.basics);
+    }
+    s.version = 2;
+  }
+  // Standardrezepte, die du nicht selbst bearbeitet hast, immer auf den neuesten Stand bringen;
+  // neu hinzugekommene ergänzen (gelöschte bleiben weg)
+  const standard = new Map(STANDARD_REZEPTE.map((r) => [r.id, r]));
+  s.rezepte = s.rezepte.map((r) => (standard.has(r.id) && !r.bearbeitet ? clone(standard.get(r.id)) : r));
   const vorhanden = new Set(s.rezepte.map((r) => r.id));
   for (const r of STANDARD_REZEPTE) {
     if (!vorhanden.has(r.id) && !s.geloeschteStandard.includes(r.id)) s.rezepte.push(clone(r));
@@ -243,7 +298,7 @@ function zutatenIndex() {
     e[p.einheit] = (e[p.einheit] || 0) + 1;
   };
   state.rezepte.forEach((r) => r.zutaten.forEach(zaehle));
-  state.einstellungen.basics.forEach(zaehle);
+  alltagsZeilen().forEach(zaehle);
   for (const n of Object.keys(KATALOG)) if (!idx.has(n)) idx.set(n, {});
   for (const n of Object.keys(state.vorrat)) if (!idx.has(n)) idx.set(n, {});
   return idx;
@@ -307,20 +362,70 @@ function loesche(datum, slot) {
   slotSet(datum, slot, null);
 }
 
-function vorlageAnwenden(start, index) {
-  const v = PLAN_VORLAGEN[index];
-  for (let t = 0; t < 7; t++) { loesche(addTage(start, t), "m"); loesche(addTage(start, t), "a"); }
-  v.tage.forEach(([mittag, abend], t) => {
+const neuerEintrag = (id) => ({ typ: "rezept", id, portionen: 1, rest: false });
+
+// Trägt Vorlagen-Tage ([Mittag, Abend]) ab einem Datum ein und ersetzt, was dort stand.
+// "reste" = Abendessen vom Vortag mit einer Portion mehr. nurAbendAmStart: Mittag am ersten Tag bleibt unberührt.
+function tageBelegen(start, tage, nurAbendAmStart = false) {
+  const mittagFrei = (i) => !(i === 0 && nurAbendAmStart);
+  tage.forEach((_, i) => {
+    const d = addTage(start, i);
+    if (mittagFrei(i)) loesche(d, "m");
+    loesche(d, "a");
+  });
+  tage.forEach(([mittag, abend], i) => {
+    const d = addTage(start, i);
+    if (rezept(abend)) slotSet(d, "a", neuerEintrag(abend));
+    if (mittag !== "reste" && mittagFrei(i) && rezept(mittag)) slotSet(d, "m", neuerEintrag(mittag));
+  });
+  tage.forEach(([mittag], i) => {
+    if (mittag === "reste" && mittagFrei(i)) restAn(...vorheriger(addTage(start, i), "m"));
+  });
+  // Letzter Abend: Reste für den Tag danach, falls dort noch nichts geplant ist
+  if (!slotGet(addTage(start, tage.length), "m")) restAn(addTage(start, tage.length - 1), "a");
+}
+
+const vorlageAnwenden = (start, index) => tageBelegen(start, PLAN_VORLAGEN[index].tage);
+const planAbDatum = (start, nurAbend) => tageBelegen(start, PLAN_VORLAGEN.flatMap((v) => v.tage), nurAbend);
+
+// ================= Zufall =================
+
+// Zufälliges Hauptgericht: nicht schon in dieser Woche, möglichst nicht in den letzten 2 Wochen.
+// An Sporttagen werden Gerichte mit Tag "Sport" bevorzugt, Gerichte, die Reste verwerten, ebenfalls.
+function zufallsRezept(datum, slot, ausschliessen = new Set()) {
+  const kuerzlich = new Set();
+  for (let t = 1; t <= 14; t++) {
+    for (const s of ["m", "a"]) { const e = slotGet(addTage(datum, -t), s); if (e?.id) kuerzlich.add(e.id); }
+  }
+  const reste = resteNamen(datum);
+  const sport = slot === "a" && istSporttag(datum);
+  let pool = state.rezepte.filter((r) => r.portionen > 1 && !ausschliessen.has(r.id));
+  if (pool.some((r) => !kuerzlich.has(r.id))) pool = pool.filter((r) => !kuerzlich.has(r.id));
+  if (!pool.length) return null;
+  const gewicht = (r) => 1 + (sport && r.tags.includes("Sport") ? 2 : 0) + (zutatNamen(r).some((n) => reste.has(n)) ? 1 : 0);
+  let los = Math.random() * pool.reduce((s, r) => s + gewicht(r), 0);
+  return pool.find((r) => (los -= gewicht(r)) < 0) || pool[pool.length - 1];
+}
+
+// Füllt alle freien Abende der Woche zufällig; das Mittagessen am nächsten Tag sind die Reste.
+// Bereits Geplantes bleibt stehen. Gibt die Zahl der neu gewürfelten Gerichte zurück.
+function zufallsWoche(start) {
+  const vergeben = geplanteIds(start);
+  let anzahl = 0;
+  // Montagmittag: Reste vom Sonntag davor, falls dort etwas gekocht wird
+  if (!slotGet(start, "m")) restAn(addTage(start, -1), "a");
+  for (let t = 0; t < 7; t++) {
     const d = addTage(start, t);
-    if (rezept(abend)) slotSet(d, "a", { typ: "rezept", id: abend, portionen: 1, rest: false });
-    if (mittag !== "reste" && rezept(mittag)) slotSet(d, "m", { typ: "rezept", id: mittag, portionen: 1, rest: false });
-  });
-  v.tage.forEach(([mittag], t) => {
-    if (mittag === "reste") restAn(...vorheriger(addTage(start, t), "m"));
-  });
-  // Sonntagabend: Reste für Montag der Folgewoche, falls dort noch nichts geplant ist
-  const sonntag = addTage(start, 6);
-  if (!slotGet(addTage(start, 7), "m")) restAn(sonntag, "a");
+    if (!slotGet(d, "a")) {
+      const r = zufallsRezept(d, "a", vergeben);
+      if (!r) break;
+      slotSet(d, "a", neuerEintrag(r.id));
+      vergeben.add(r.id);
+      anzahl++;
+    }
+    if (t < 6 && !slotGet(addTage(d, 1), "m")) restAn(d, "a");
+  }
+  return anzahl;
 }
 
 function zuletztGeplant() {
@@ -337,14 +442,13 @@ function zuletztGeplant() {
 
 function einkaufsliste(start, wochen, mitBasics) {
   const map = new Map();
-  const add = (zeile, faktor, quelle, datum = null) => {
-    const p = parseZutat(zeile);
+  const add = (p, quelle, datum = null) => {
     if (!p) return;
     const key = `${p.name}|${p.einheit}`;
     let it = map.get(key);
     if (!it) map.set(key, (it = { key, name: p.name, einheit: p.einheit, menge: 0, ohneMenge: false, quellen: new Set(), tage: [] }));
     if (p.menge == null) it.ohneMenge = true;
-    else it.menge += p.menge * faktor;
+    else it.menge += p.menge;
     it.quellen.add(quelle);
     if (datum) it.tage.push(datum);
   };
@@ -353,11 +457,13 @@ function einkaufsliste(start, wochen, mitBasics) {
     for (const slot of ["m", "a"]) {
       const e = slotGet(d, slot);
       const r = e?.typ === "rezept" && rezept(e.id);
-      if (r) r.zutaten.forEach((z) => add(z, e.portionen / r.portionen, r.name, d));
+      if (r) zutatenFuer(r, e.portionen, slot === "a" && istSporttag(d)).forEach((p) => add(p, r.name, d));
     }
+    // Frühstück, Eiweiß-Snack und Banane vor dem Training gehören zu den Basics
+    if (mitBasics) for (const [quelle, zeilen] of alltagsPosten(d)) zeilen.forEach((z) => add(parseZutat(z), quelle));
   }
   if (mitBasics) {
-    for (let w = 0; w < wochen; w++) state.einstellungen.basics.forEach((z) => add(z, 1, "Wochen-Basics"));
+    for (let w = 0; w < wochen; w++) state.einstellungen.basics.forEach((z) => add(parseZutat(z), "Wochen-Basics"));
   }
 
   const idx = zutatenIndex();
@@ -449,7 +555,7 @@ const rezepteMit = (name, ohne = new Set()) =>
 
 // Was nach den Gerichten einer Woche durch Packungsgrößen übrig bleibt (ohne Wochen-Basics und Vorrat)
 function resteDerWoche(start) {
-  const basics = new Set(state.einstellungen.basics.map((z) => parseZutat(z)?.name));
+  const basics = new Set(alltagsZeilen().map((z) => parseZutat(z)?.name));
   return einkaufsliste(start, 1, false).kaufen
     .filter((it) => !basics.has(it.name))
     .map((it) => ({ name: it.name, einheit: it.einheit, rest: kaufMenge(it).rest }))
@@ -471,7 +577,7 @@ function gekauftMerken(key, gekauft) {
   if (!h) return;
   const km = kaufMenge(it);
   const eintrag = { id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`, name: it.name, gekauft: h0, periode: pk, key };
-  if (it.quellen.has("Wochen-Basics")) {
+  if ([...it.quellen].some((q) => ALLTAG_QUELLEN.has(q))) {
     // Nur was innerhalb von 2 Wochen verdirbt – Äpfel oder Eier würden die Liste nur füllen
     if (h[0] <= 14) state.imBlick.push({ ...eintrag, text: `${it.name} (${km.text})`, ablauf: addTage(h0, h[0]), quelle: "basics" });
   } else if (km.rest && (h[1] || h[0] <= 60)) {
@@ -555,6 +661,21 @@ const sheetKopf = (titel) =>
 
 // ================= Ansicht: Wochenplan =================
 
+// Frühstück, Eiweiß-Snack und Training – stehen jeden Tag gleich, deshalb einmal oben statt bei jedem Tag
+function renderAlltagKarte() {
+  const e = state.einstellungen;
+  const kurz = (zeilen) => zeilen.map(parseZutat).filter(Boolean).map((p) => fmtZutat(p)).join(", ");
+  const z = e.ziele;
+  return `<div class="karte fruehstueck">
+      <span class="label">Jeden Tag</span>
+      <p><strong>Frühstück:</strong> ${esc(e.fruehstueck)}</p>
+      <p><strong>Eiweiß-Snack:</strong> ${esc(kurz(e.snack))}</p>
+      ${e.training.length ? `<p><strong>Sporttage, vor dem Training:</strong> ${esc(kurz(e.training))}</p>` : ""}
+      <p class="slot-meta">Ziel pro Tag: ${zahlDe(z.kcal[0])}–${zahlDe(z.kcal[1])} kcal, ${z.eiweiss[0]}–${z.eiweiss[1]} g Eiweiß.
+        Die Tagessumme enthält Frühstück, Snack und Training.</p>
+    </div>`;
+}
+
 function renderPlan() {
   const s = ui.woche, h = heute();
   const sport = new Set(state.einstellungen.sporttage);
@@ -566,7 +687,8 @@ function renderPlan() {
     </div>
     ${s !== montag(h) ? `<button class="link-btn zentriert" data-action="woche-heute">Zur aktuellen Woche</button>` : ""}
     ${renderBaldVerbrauchen()}
-    <div class="karte fruehstueck"><span class="label">Frühstück · jeden Tag</span><p>${esc(state.einstellungen.fruehstueck)}</p></div>`;
+    ${renderAlltagKarte()}
+    <button class="btn wuerfel" data-action="woche-wuerfeln">🎲 Freie Abende würfeln</button>`;
 
   for (let t = 0; t < 7; t++) {
     const d = addTage(s, t);
@@ -584,7 +706,7 @@ function renderPlan() {
   html += `
     <div class="aktionen">
       <button class="btn primaer" data-action="woche-einkauf">Einkaufsliste für diese Woche</button>
-      <button class="btn" data-action="vorlagen">Woche aus Vorlage füllen</button>
+      <button class="btn" data-action="vorlagen">4-Wochen-Plan / Vorlage</button>
       <button class="btn gefahr" data-action="woche-leeren" data-bestaetigen="Wirklich leeren?">Woche leeren</button>
     </div>`;
   return html;
@@ -628,11 +750,24 @@ function renderResteKarte(start) {
     </section>`;
 }
 
+const ZIEL_ZEICHEN = { ok: "✓", unter: "↓", ueber: "↑" };
+const ZIEL_TEXT = { ok: "im Zielbereich", unter: "unter dem Ziel", ueber: "über dem Ziel" };
+
 function renderTagesSumme(d) {
   const s = tagesNaehrwerte(d);
   if (!s.mahlzeiten) return "";
-  return `<div class="tag-summe">${s.mahlzeiten === 2 ? "Mittag + Abend" : "Geplant"}: ca. ${zahlDe(s.kcal)} kcal ·
-    <strong>${zahlDe(s.eiweiss)} g Eiweiß</strong> · ${zahlDe(s.kh)} g KH · ${zahlDe(s.fett)} g Fett</div>`;
+  const z = state.einstellungen.ziele;
+  const pille = (wert, einheit, ziel, nurMinimum) => {
+    // Halb geplante Tage nicht bewerten – da fehlt ja noch eine Mahlzeit
+    if (s.mahlzeiten < 2) return `<span class="ziel">${zahlDe(wert)}${einheit}</span>`;
+    const st = zielStatus(wert, ziel, nurMinimum);
+    return `<span class="ziel ${st}" title="${ZIEL_TEXT[st]} (${zahlDe(ziel[0])}–${zahlDe(ziel[1])})">${ZIEL_ZEICHEN[st]} ${zahlDe(wert)}${einheit}</span>`;
+  };
+  return `<div class="tag-summe">
+      <span>Tag gesamt${s.mahlzeiten < 2 ? " (noch nicht alles geplant)" : ""}:</span>
+      ${pille(s.kcal, " kcal", z.kcal, false)} ${pille(s.eiweiss, " g Eiweiß", z.eiweiss, true)}
+      <span>${zahlDe(s.kh)} g KH · ${zahlDe(s.fett)} g Fett</span>
+    </div>`;
 }
 
 function renderSlot(d, slot) {
@@ -682,6 +817,8 @@ function pickerOeffnen(datum, slot) {
     ${sheetKopf(`${TAGE_LANG[wochentag(datum)]} ${kurzDatum(datum)}, ${SLOTNAME[slot]}`)}
     ${vr ? `<button class="option" data-action="reste-waehlen" data-datum="${datum}" data-slot="${slot}">
         <strong>↩ Reste: ${esc(vr.name)}</strong><small>Eine Portion wird beim vorherigen Essen mitgekocht</small></button>` : ""}
+    <button class="option" data-action="zufall-slot">
+      <strong>🎲 Zufälliges Gericht</strong><small>Nicht diese Woche und möglichst nicht in den letzten 2 Wochen</small></button>
     <input type="search" class="suche" placeholder="Name oder Zutat suchen…" data-input="picker-suche" autocomplete="off">
     <div class="chips scroll" id="picker-filter">${filterChips(null, "picker")}</div>
     <div id="picker-liste" class="rezept-liste"></div>
@@ -725,9 +862,18 @@ function renderPickerListe() {
 }
 
 function vorlagenOeffnen() {
+  const h = heute();
   openModal(`
-    ${sheetKopf("Woche aus Vorlage füllen")}
-    <p class="hinweis">Lädt eine Woche aus deinem 4-Wochen-Plan in ${kwText(ui.woche, 1)}. Bereits geplante Gerichte dieser Woche werden ersetzt.</p>
+    ${sheetKopf("4-Wochen-Plan / Vorlage")}
+    <form class="formular karte" data-form="plan-start">
+      <strong>Ganzen 4-Wochen-Plan starten</strong>
+      <p class="hinweis">Trägt alle 28 Tage der Reihe nach ab dem Startdatum ein. Tag 1 ist die Linsen-Bolognese, das Mittagessen sind jeweils die Reste vom Vorabend. Die Sporttage bleiben an deinen festen Wochentagen. Was in diesen 28 Tagen schon geplant war, wird ersetzt.</p>
+      <label>Startdatum<input type="date" name="start" value="${h}" required></label>
+      <label class="schalter"><input type="checkbox" name="nurAbend" checked> Am ersten Tag erst mit dem Abendessen beginnen</label>
+      <button class="btn primaer" type="submit">Plan starten</button>
+    </form>
+    <h3 class="kat-titel">Oder nur eine Woche laden</h3>
+    <p class="hinweis">Lädt eine Woche aus dem 4-Wochen-Plan in ${kwText(ui.woche, 1)}. Bereits geplante Gerichte dieser Woche werden ersetzt.</p>
     ${PLAN_VORLAGEN.map((v, i) => `
       <button class="option" data-action="vorlage-anwenden" data-index="${i}">
         <strong>${esc(v.name)}</strong>
@@ -793,7 +939,7 @@ function rezeptZeigen(id, portionen) {
 }
 
 function renderDetail() {
-  const r = rezept(ui.detail.id), p = ui.detail.portionen, f = p / r.portionen;
+  const r = rezept(ui.detail.id), p = ui.detail.portionen;
   const tags = r.tags.filter((t) => t !== "Schnell");
   openModal(`
     ${sheetKopf(r.name)}
@@ -807,7 +953,8 @@ function renderDetail() {
         <button data-action="detail-portionen" data-delta="1" aria-label="Mehr">+</button>
       </div>
     </div>
-    <ul class="zutaten">${r.zutaten.map((z) => { const pz = parseZutat(z); return pz ? `<li>${esc(fmtZutat(pz, f))}</li>` : ""; }).join("")}</ul>
+    <ul class="zutaten">${zutatenFuer(r, p).map((pz) =>
+      `<li>${esc(fmtZutat(pz))}${pz.beilage ? ` <span class="slot-meta">· Beilage, ${beilageProPortion(pz.name)} g pro Portion</span>` : ""}</li>`).join("")}</ul>
     <h3>Zubereitung</h3>
     ${p !== r.portionen ? `<p class="hinweis">Mengen im Text gelten für ${r.portionen} Portionen.</p>` : ""}
     <ol class="schritte">${r.schritte.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
@@ -849,7 +996,8 @@ function editorOeffnen(id) {
       </div>
       <label>Tags <small>(mit Komma getrennt, z. B. Pasta, Ofen, Sport)</small>
         <input name="tags" value="${esc(r.tags.join(", "))}"></label>
-      <label>Zutaten <small>(eine pro Zeile: Menge, Einheit, Zutat – z. B. „120 g Rote Linsen“, „1 Dose Kichererbsen“)</small>
+      <label>Zutaten <small>(eine pro Zeile: Menge, Einheit, Zutat – z. B. „120 g Rote Linsen“, „1 Dose Kichererbsen“.
+        Für Nudeln, Reis, Couscous oder Kartoffeln als Beilage: „Beilage: Reis“ – die Menge kommt dann aus den Einstellungen.)</small>
         <textarea name="zutaten" rows="8" data-input="zutaten-vorschau">${esc(r.zutaten.join("\n"))}</textarea></label>
       <ul class="vorschau" id="zutaten-vorschau"></ul>
       <label>Zubereitung <small>(ein Schritt pro Zeile)</small>
@@ -866,8 +1014,10 @@ function zutatenVorschau(textarea) {
   const zeilen = textarea.value.split("\n").map(parseZutat).filter(Boolean);
   $("#zutaten-vorschau").innerHTML = zeilen.map((p) => {
     const neu = !KATALOG[p.name];
+    if (p.beilage) p = { ...p, menge: beilageProPortion(p.name) };
     const ohneNw = p.menge != null && !zutatGramm(p);
-    const info = neu ? "neu · Sonstiges · ohne Nährwerte" : esc(kategorie(p.name)) + (ohneNw ? " · ohne Nährwerte" : "");
+    const info = (p.beilage ? "Beilage pro Portion · " : "")
+      + (neu ? "neu · Sonstiges · ohne Nährwerte" : esc(kategorie(p.name)) + (ohneNw ? " · ohne Nährwerte" : ""));
     return `<li><span>${esc(fmtZutat(p))}</span><span class="kat${neu || ohneNw ? " neu" : ""}">${info}</span></li>`;
   }).join("");
 }
@@ -893,7 +1043,7 @@ function renderEinkauf() {
           ${[1, 2, 3, 4].map((n) => `<option value="${n}"${n === wochen ? " selected" : ""}>${n} ${n === 1 ? "Woche" : "Wochen"}</option>`).join("")}
         </select>
       </label>
-      <label class="schalter"><input type="checkbox" data-change="einkauf-basics"${basics ? " checked" : ""}> Wochen-Basics</label>
+      <label class="schalter"><input type="checkbox" data-change="einkauf-basics"${basics ? " checked" : ""}> Frühstück & Basics</label>
     </div>
     <div class="export karte">
       <span><strong id="offen-zahl">${offen}</strong> Artikel offen</span>
@@ -1041,19 +1191,49 @@ function renderVorratListe() {
 
 // ================= Ansicht: Einstellungen =================
 
+const zahlFeld = (art, feld, index, wert) =>
+  `<input type="number" inputmode="numeric" min="0" class="menge-input" data-change="${art}" data-feld="${feld}" data-index="${index}" value="${wert}">`;
+
 function renderMehr() {
   const e = state.einstellungen;
   return `
     <section class="karte">
-      <h2>Frühstück</h2>
-      <p class="hinweis">Steht jeden Tag gleich im Plan. Die Zutaten dafür gehören in die Wochen-Basics.</p>
-      <textarea rows="3" data-change="fruehstueck">${esc(e.fruehstueck)}</textarea>
+      <h2>Tagesziel</h2>
+      <p class="hinweis">Jeder Tag im Plan zeigt, ob du im Bereich liegst (✓), darunter (↓) oder darüber (↑). Beim Eiweiß zählt nur die Untergrenze – mehr ist kein Problem. Nach 2–3 Wochen lohnt ein Blick auf Hunger, Energie beim Training und Gewicht.</p>
+      <div class="zahlen-raster">
+        <span>kcal</span>${zahlFeld("ziel", "kcal", 0, e.ziele.kcal[0])}<span>bis</span>${zahlFeld("ziel", "kcal", 1, e.ziele.kcal[1])}
+        <span>Eiweiß (g)</span>${zahlFeld("ziel", "eiweiss", 0, e.ziele.eiweiss[0])}<span>bis</span>${zahlFeld("ziel", "eiweiss", 1, e.ziele.eiweiss[1])}
+      </div>
     </section>
 
     <section class="karte">
-      <h2>Wochen-Basics</h2>
-      <p class="hinweis">Kommen jede Woche auf die Einkaufsliste (Frühstück, Snacks). Eine Zeile pro Artikel, z. B. „500 g Skyr“.</p>
-      <textarea rows="9" data-change="basics">${esc(e.basics.join("\n"))}</textarea>
+      <h2>Beilagen pro Portion</h2>
+      <p class="hinweis">Roh gewogen. Gilt für alle Rezepte mit „Beilage: …“ in der Zutatenliste. Hier stellst du nach, wenn du satter oder leichter essen willst.</p>
+      <div class="zahlen-raster zwei">
+        <span>Nudeln (g)</span>${zahlFeld("beilage", "nudeln", "", e.beilagen.nudeln)}
+        <span>Reis (g)</span>${zahlFeld("beilage", "reis", "", e.beilagen.reis)}
+        <span>Couscous (g)</span>${zahlFeld("beilage", "couscous", "", e.beilagen.couscous)}
+        <span>Kartoffeln (g)</span>${zahlFeld("beilage", "kartoffeln", "", e.beilagen.kartoffeln)}
+        <span>Sporttag abends (+ %)</span>${zahlFeld("beilage", "sportZuschlag", "", e.beilagen.sportZuschlag)}
+      </div>
+    </section>
+
+    <section class="karte">
+      <h2>Frühstück</h2>
+      <p class="hinweis">Steht jeden Tag gleich im Plan.</p>
+      <textarea rows="3" data-change="fruehstueck">${esc(e.fruehstueck)}</textarea>
+      <label class="feld">Mengen für einen typischen Tag <small>(für Tagessumme und Einkaufsliste, eine Zutat pro Zeile)</small>
+        <textarea rows="6" data-change="alltag" data-feld="fruehstueckZutaten">${esc(e.fruehstueckZutaten.join("\n"))}</textarea></label>
+      <label class="feld">Eiweiß-Snack, jeden Tag
+        <textarea rows="2" data-change="alltag" data-feld="snack">${esc(e.snack.join("\n"))}</textarea></label>
+      <label class="feld">Vor dem Training, nur an Sporttagen
+        <textarea rows="2" data-change="alltag" data-feld="training">${esc(e.training.join("\n"))}</textarea></label>
+    </section>
+
+    <section class="karte">
+      <h2>Weitere Wochen-Basics</h2>
+      <p class="hinweis">Was sonst jede Woche gekauft wird (Brot, Eier, Rohkost …). Frühstück und Snack kommen automatisch dazu. Eine Zeile pro Artikel, z. B. „500 g Naturjoghurt“.</p>
+      <textarea rows="6" data-change="basics">${esc(e.basics.join("\n"))}</textarea>
     </section>
 
     <section class="karte">
@@ -1137,6 +1317,21 @@ const AKTIONEN = {
     speichernRender();
   },
   vorlagen: () => vorlagenOeffnen(),
+  "woche-wuerfeln": () => {
+    const n = zufallsWoche(ui.woche);
+    speichernRender();
+    toast(n ? `${n} ${n === 1 ? "Gericht" : "Gerichte"} gewürfelt` : "Alle Abende sind schon geplant");
+  },
+  "zufall-slot": () => {
+    const { datum, slot } = ui.picker;
+    const r = zufallsRezept(datum, slot, geplanteIds(montag(datum)));
+    if (!r) { toast("Kein passendes Rezept gefunden"); return; }
+    loesche(datum, slot);
+    slotSet(datum, slot, neuerEintrag(r.id));
+    closeModal();
+    speichernRender();
+    toast(`🎲 ${r.name}`);
+  },
   "vorlage-anwenden": (d) => {
     vorlageAnwenden(ui.woche, +d.index);
     closeModal();
@@ -1268,6 +1463,23 @@ const AENDERUNGEN = {
     speichern();
   },
   fruehstueck: (el) => { state.einstellungen.fruehstueck = el.value.trim(); speichern(); toast("Gespeichert"); },
+  alltag: (el) => {
+    state.einstellungen[el.dataset.feld] = el.value.split("\n").map((z) => z.trim()).filter(Boolean);
+    speichern();
+    toast("Gespeichert");
+  },
+  ziel: (el) => {
+    const wert = Math.max(0, +el.value || 0);
+    state.einstellungen.ziele = clone(state.einstellungen.ziele);
+    state.einstellungen.ziele[el.dataset.feld][+el.dataset.index] = wert;
+    speichern();
+    toast("Gespeichert");
+  },
+  beilage: (el) => {
+    state.einstellungen.beilagen = { ...state.einstellungen.beilagen, [el.dataset.feld]: Math.max(0, +el.value || 0) };
+    speichern();
+    toast("Gespeichert");
+  },
   basics: (el) => {
     state.einstellungen.basics = el.value.split("\n").map((z) => z.trim()).filter(Boolean);
     speichern();
@@ -1336,6 +1548,15 @@ const FORMULARE = {
     speichernRender();
     toast(`${name} im Vorrat`);
   },
+  "plan-start": (f) => {
+    const start = feld(f, "start");
+    if (!start) return;
+    planAbDatum(start, f.elements.namedItem("nurAbend").checked);
+    ui.woche = montag(start);
+    closeModal();
+    speichernRender();
+    toast(`4-Wochen-Plan ab ${kurzDatum(start)} eingetragen`);
+  },
   "blick-neu": (f) => {
     const text = feld(f, "text").trim();
     if (!text) return;
@@ -1362,7 +1583,7 @@ const FORMULARE = {
     if (!daten.name) return;
     let id = f.dataset.id;
     if (id) {
-      Object.assign(rezept(id), daten);
+      Object.assign(rezept(id), daten, { bearbeitet: true });
     } else {
       const slug = daten.name.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       id = `${slug || "rezept"}-${Date.now().toString(36)}`;

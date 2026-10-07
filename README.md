@@ -4,6 +4,9 @@ Web-App für Wochenplan, Rezepte, Vorrat und Einkaufsliste. Läuft im Browser un
 
 ## Funktionen
 
+- **4-Wochen-Plan ab Datum:** trägt alle 28 Tage der Reihe nach ein, auch mitten in der Woche („heute nur Abendessen“).
+- **Zufall:** „Freie Abende würfeln“ füllt die Woche ohne Wiederholungen, Mittag sind die Reste. An Sporttagen werden Gerichte mit Tag „Sport“ bevorzugt, ebenso Gerichte, die Reste verwerten. Einzelne Mahlzeiten lassen sich in der Auswahl auswürfeln.
+- **Beilagen und Tagesziel:** Nudeln, Reis, Couscous und Kartoffeln pro Portion sind einstellbar (Rezeptzeile „Beilage: Reis“), an Sporttagen gibt es abends mehr. Die Tagessumme enthält Frühstück, Eiweiß-Snack und die Banane vor dem Training und zeigt ✓/↓/↑ gegenüber dem Tagesziel.
 - **Plan:** Mittag und Abend pro Tag frei wählen, Portionen anpassen. „Rest für morgen Mittag“ kocht eine Portion mehr und trägt sie automatisch beim nächsten Essen ein. „Woche aus Vorlage füllen“ lädt eine der 4 Wochen aus dem ursprünglichen Plan.
 - **Einkauf:** Berechnet alles, was für den gewählten Zeitraum (1–4 Wochen) fehlt: Rezeptzutaten + Wochen-Basics − Vorrat. Sortiert nach Supermarkt-Bereich, Mengen sinnvoll aufgerundet. Export nach Apple Erinnerungen oder in die Zwischenablage.
 - **Rezepte:** 30 Rezepte, Suche nach Name oder Zutat, Filter. Mengen skalieren mit den Portionen. Eigene Rezepte anlegen und bearbeiten.
