@@ -541,10 +541,10 @@ const SPORT_TIPPS = [
 ];
 
 const STANDARD_EINSTELLUNGEN = {
-  fruehstueck: "Overnight Oats oder Quark mit Haferflocken, Obst, Leinsamen und Walnüssen – " +
-    "alternativ Vollkornbrot mit Ei oder Kräuterquark und Rohkost.",
+  fruehstueck: "Skyr mit Haferflocken, Apfel, Walnüssen und geschroteten Leinsamen. " +
+    "Das Obst ab und zu wechseln: Banane, Birne oder TK-Beeren.",
   // Mengen für einen typischen Tag – zählen in die Tagessumme und (× 7) in die Einkaufsliste.
-  fruehstueckZutaten: ["80 g Haferflocken", "200 ml Milch", "140 g Skyr", "1 Apfel", "10 g Leinsamen", "15 g Walnüsse"],
+  fruehstueckZutaten: ["300 g Skyr", "70 g Haferflocken", "1 Apfel", "15 g Walnüsse", "1 EL Leinsamen"],
   snack: ["250 g Magerquark", "1 Banane"], // täglicher Eiweiß-Snack
   training: ["1 Banane"],                  // vor dem Training, nur an Sporttagen
   sporttage: [0, 2, 4], // Mo, Mi, Fr (0 = Montag)
@@ -565,7 +565,49 @@ const STANDARD_EINSTELLUNGEN = {
 };
 
 // Frühere Standard-Basics – wer sie nie geändert hat, bekommt beim Update die neuen
+// Früheres Standardfrühstück (Version 2) – wird beim Update ersetzt, wenn unverändert
+const ALTES_STANDARD_FRUEHSTUECK = {
+  text: "Overnight Oats oder Quark mit Haferflocken, Obst, Leinsamen und Walnüssen – " +
+    "alternativ Vollkornbrot mit Ei oder Kräuterquark und Rohkost.",
+  zutaten: ["80 g Haferflocken", "200 ml Milch", "140 g Skyr", "1 Apfel", "10 g Leinsamen", "15 g Walnüsse"],
+};
+
 const ALTE_STANDARD_BASICS = [
   "1 Stk Vollkornbrot", "6 Eier", "500 g Magerquark", "500 g Skyr", "500 g Naturjoghurt",
   "1 l Milch", "1 kg Äpfel", "6 Bananen", "500 g Karotten",
 ];
+
+// Fotos der Standardrezepte (bilder/<id>.jpg) von Wikimedia Commons, auf 3:2 zugeschnitten.
+// Die Lizenzen verlangen die Nennung von Urheber und Lizenz – das zeigt die App beim Bild und unter „Mehr“.
+const BILDER = {
+  "bohnen-bratlinge": { autor: "Miansari66", lizenz: "CC0", lizenzUrl: "http://creativecommons.org/publicdomain/zero/1.0/deed.en", seite: "https://commons.wikimedia.org/wiki/File:Falafel_1.JPG" },
+  "bohnen-wraps": { autor: "Stephan Mosel from Innsbruck, Austria", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Veggie_Burrito_Nuremberg.jpg" },
+  "brot-huettenkaese": { autor: "Miia Ranta from Finland", lizenz: "CC BY-SA 2.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/2.0", seite: "https://commons.wikimedia.org/wiki/File:Open_faced_sandwiches_with_spread.jpg" },
+  "chili-sin-carne": { autor: "Benreis", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Chilli_sine_carne_Zur_Tanne_Harsdorf.jpg" },
+  "couscous-salat": { autor: "Karen and Brad Emerson", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Couscous_and_lentil_salad_(3658113458).jpg" },
+  "erdnuss-nudeln": { autor: "Karen and Brad Emerson", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Peanut_noodles_(4260867491).jpg" },
+  "frittata": { autor: "Kolforn (Kolforn)", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:-2019-10-27_Potato_%26_onion_frittata,_Cromer.JPG" },
+  "gebratener-reis": { autor: "Gary Dee", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Fried_Rice_1_(Eggs_%26_Vegetables).jpg" },
+  "gefuellte-paprika": { autor: "Yamen", lizenz: "CC BY-SA 3.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/3.0", seite: "https://commons.wikimedia.org/wiki/File:Poivrons_farcis_au_couscous.JPG" },
+  "kartoffel-linsen-suppe": { autor: "Vegan Feast Catering", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Cream_of_Carrot_Soup_(4129540261)_cropped.jpg" },
+  "kichererbsen-bowl": { autor: "FitTasteTic", lizenz: "CC BY-SA 2.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/2.0", seite: "https://commons.wikimedia.org/wiki/File:Healthy_Vegan_Buddha_Bowl_-_49859044753.jpg" },
+  "kichererbsen-curry": { autor: "Kari Sullivan from Austin, TX", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Spinach-Chickpea_Curry_(3117324894).jpg" },
+  "kichererbsen-pfanne": { autor: "HaJunkiyada", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Algerian_Couscous_with_Vegetables.jpg" },
+  "kohl-kartoffel-pfanne": { autor: "VegaTeam", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Colcannon_(5532418361).jpg" },
+  "kuerbis-linsen-suppe": { autor: "Cala cala_maffia", lizenz: "CC0", lizenzUrl: "http://creativecommons.org/publicdomain/zero/1.0/deed.en", seite: "https://commons.wikimedia.org/wiki/File:Autumn_Soup_(Unsplash)_cropped.jpg" },
+  "linsen-bolognese": { autor: "Chingon", lizenz: "Public domain", lizenzUrl: "", seite: "https://commons.wikimedia.org/wiki/File:Spaghetti_Bolognese.jpg" },
+  "linsen-dal": { autor: "AugustineKajur", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Dal_Tadka-Delhi.jpg" },
+  "linsen-eintopf": { autor: "Matthias Lipinski", lizenz: "CC0", lizenzUrl: "http://creativecommons.org/publicdomain/zero/1.0/deed.en", seite: "https://commons.wikimedia.org/wiki/File:Linseneintopf.jpg" },
+  "linsen-kokos-curry": { autor: "\"Chef\" at Cookipedia.co.uk", lizenz: "CC BY 4.0", lizenzUrl: "https://creativecommons.org/licenses/by/4.0", seite: "https://commons.wikimedia.org/wiki/File:Red_lentil_curry_soup.jpg" },
+  "mex-reispfanne": { autor: "Meg H", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Mexican-Rice-and-Beans_(35582784480).jpg" },
+  "minestrone": { autor: "Katrin Morenz from Aachen, Deutschland", lizenz: "CC BY-SA 2.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/2.0", seite: "https://commons.wikimedia.org/wiki/File:Minestrone_soup.jpg" },
+  "nudelauflauf": { autor: "Blues 1911", lizenz: "CC BY-SA 3.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/3.0", seite: "https://commons.wikimedia.org/wiki/File:Pasta_al_Forno_01.jpg" },
+  "ofengemuese": { autor: "Famartin", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:2021-11-25_21_30_29_Wegmans_Roasted_Butternut_Squash,_Spinach_and_Craisins_in_the_Franklin_Farm_section_of_Oak_Hill,_Fairfax_County,_Virginia.jpg" },
+  "ofenkartoffeln": { autor: "Luca Hammer from Paderborn, Germany", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Potato_wedges_at_Mensa_Paderborn_(11956794164).jpg" },
+  "pasta-brokkoli-feta": { autor: "AnticoMu90", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:BroccoliPasta.jpg" },
+  "ruehrei-gemuese": { autor: "HaJunkiyada", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Breakfast_in_Israel_scrambled_eggs_with_herbs.jpg" },
+  "shakshuka": { autor: "Joe Mahoney", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Shakshuka1.jpg" },
+  "spinat-feta-pfannkuchen": { autor: "Karen and Brad Emerson", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Spinach_crepes_(3236762733).jpg" },
+  "tofu-pfanne": { autor: "Miscellaneous contributor", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Tofu_stir-fry.jpeg" },
+  "wrap-pizza": { autor: "HaJunkiyada", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Homemade_tortilla_pizza.jpg" },
+};

@@ -132,6 +132,20 @@ function fmtZutat(p, faktor = 1) {
   return `${fmtMenge(m, p.einheit)} ${name}`;
 }
 
+// ================= Bilder =================
+
+const bildPfad = (r) => (r && BILDER[r.id] ? `bilder/${r.id}.jpg` : null);
+function bildKlein(r, klasse = "thumb") {
+  const p = bildPfad(r);
+  return p ? `<img class="${klasse}" src="${p}" alt="" loading="lazy">` : `<span class="${klasse} platzhalter" aria-hidden="true">🍽</span>`;
+}
+// Urheber und Lizenz – von den Creative-Commons-Lizenzen verlangt
+function bildNachweis(id) {
+  const b = BILDER[id];
+  const lizenz = b.lizenzUrl ? `<a href="${esc(b.lizenzUrl)}" target="_blank" rel="noopener">${esc(b.lizenz)}</a>` : esc(b.lizenz);
+  return `Foto: <a href="${esc(b.seite)}" target="_blank" rel="noopener">${esc(b.autor)}</a>, ${lizenz}, Wikimedia Commons (zugeschnitten)`;
+}
+
 const kategorie = (name) => (KATALOG[name] ? KATALOG[name][0] : "Sonstiges");
 const einheitLabel = (e) => (e === "Stk" ? "Stück" : e);
 
@@ -233,7 +247,7 @@ function neuerState() {
   const vorrat = {};
   for (const [name, [, grund]] of Object.entries(KATALOG)) if (grund) vorrat[name] = { menge: null, einheit: null };
   return {
-    version: 2,
+    version: 3,
     rezepte: clone(STANDARD_REZEPTE),
     geloeschteStandard: [],
     plan: {},           // "2026-10-06": { m: Eintrag, a: Eintrag }
@@ -263,6 +277,15 @@ function laden(roh) {
       s.einstellungen.basics = clone(STANDARD_EINSTELLUNGEN.basics);
     }
     s.version = 2;
+  }
+  // Update auf Version 3: neues Standardfrühstück (Skyr, Haferflocken, Apfel, Nüsse, Leinsamen)
+  if (alteVersion < 3) {
+    const e = s.einstellungen, alt = ALTES_STANDARD_FRUEHSTUECK;
+    if (e.fruehstueck === alt.text) e.fruehstueck = STANDARD_EINSTELLUNGEN.fruehstueck;
+    if (JSON.stringify(e.fruehstueckZutaten) === JSON.stringify(alt.zutaten)) {
+      e.fruehstueckZutaten = clone(STANDARD_EINSTELLUNGEN.fruehstueckZutaten);
+    }
+    s.version = 3;
   }
   // Standardrezepte, die du nicht selbst bearbeitet hast, immer auf den neuesten Stand bringen;
   // neu hinzugekommene ergänzen (gelöschte bleiben weg)
@@ -402,7 +425,15 @@ function zufallsRezept(datum, slot, ausschliessen = new Set()) {
   let pool = state.rezepte.filter((r) => r.portionen > 1 && !ausschliessen.has(r.id));
   if (pool.some((r) => !kuerzlich.has(r.id))) pool = pool.filter((r) => !kuerzlich.has(r.id));
   if (!pool.length) return null;
-  const gewicht = (r) => 1 + (sport && r.tags.includes("Sport") ? 2 : 0) + (zutatNamen(r).some((n) => reste.has(n)) ? 1 : 0);
+  // Gerichte, die Reste aufbrauchen, werden bevorzugt – je schneller der Rest verdirbt, desto stärker
+  // (angebrochener Salat zählt viel, TK-Spinat oder Käse kaum)
+  const dringlichkeit = (name) => {
+    const h = HALTBARKEIT[name];
+    const tage = h ? h[1] ?? h[0] : Infinity;
+    return tage <= 5 ? 6 : tage <= 14 ? 2 : 0.5;
+  };
+  const gewicht = (r) => 1 + (sport && r.tags.includes("Sport") ? 2 : 0)
+    + [...new Set(zutatNamen(r))].filter((n) => reste.has(n)).reduce((s, n) => s + dringlichkeit(n), 0);
   let los = Math.random() * pool.reduce((s, r) => s + gewicht(r), 0);
   return pool.find((r) => (los -= gewicht(r)) < 0) || pool[pool.length - 1];
 }
@@ -782,12 +813,12 @@ function renderSlot(d, slot) {
   const r = rezept(e.id);
   const name = r ? esc(r.name) : "<em>Rezept gelöscht</em>";
   if (e.typ === "reste") {
-    return `<div class="slot reste">${label}<div class="slot-inhalt">
+    return `<div class="slot reste">${label}${bildKlein(r, "slot-bild")}<div class="slot-inhalt">
         <button class="slot-titel" data-action="rezept-zeigen" data-id="${esc(e.id)}">${name}</button>
         <span class="slot-meta">↩ Reste vom ${e.von?.[1] === "m" ? "Mittag" : "Vorabend"}</span>
       </div>${entfernen}</div>`;
   }
-  return `<div class="slot">${label}<div class="slot-inhalt">
+  return `<div class="slot">${label}${bildKlein(r, "slot-bild")}<div class="slot-inhalt">
       <button class="slot-titel" data-action="rezept-zeigen" data-id="${esc(e.id)}" data-portionen="${e.portionen}">${name}</button>
       <div class="slot-steuerung">
         <div class="stepper">
@@ -908,8 +939,11 @@ function rezepteGefiltert(suche, filter) {
 function rezeptZeile(r, aktion, extra = "") {
   const tags = r.tags.filter((t) => t !== "Schnell");
   return `<button class="rezept-zeile" data-action="${aktion}" data-id="${esc(r.id)}">
-      <span class="rz-name">${esc(r.name)}</span>
-      <span class="rz-meta">${r.minuten} Min · ${nwKurz(naehrwerte(r))}${tags.length ? " · " + esc(tags.join(", ")) : ""}${extra}</span>
+      ${bildKlein(r)}
+      <span class="rz-text">
+        <span class="rz-name">${esc(r.name)}</span>
+        <span class="rz-meta">${r.minuten} Min · ${nwKurz(naehrwerte(r))}${tags.length ? " · " + esc(tags.join(", ")) : ""}${extra}</span>
+      </span>
     </button>`;
 }
 
@@ -943,6 +977,8 @@ function renderDetail() {
   const tags = r.tags.filter((t) => t !== "Schnell");
   openModal(`
     ${sheetKopf(r.name)}
+    ${bildPfad(r) ? `<figure class="detail-bild"><img src="${bildPfad(r)}" alt="${esc(r.name)}">
+      <figcaption>${bildNachweis(r.id)}</figcaption></figure>` : ""}
     <p class="rz-meta">${r.minuten} Min${tags.length ? " · " + esc(tags.join(", ")) : ""}</p>
     ${renderNaehrwerte(naehrwerte(r))}
     <div class="detail-portionen">
@@ -1278,6 +1314,15 @@ function renderMehr() {
         <label class="btn">Importieren<input type="file" accept="application/json,.json" data-change="import" hidden></label>
         <button class="btn gefahr" data-action="alles-reset" data-bestaetigen="Wirklich alles löschen?">Alles zurücksetzen</button>
       </div>
+    </section>
+
+    <section class="karte">
+      <h2>Bildnachweise</h2>
+      <p class="hinweis">Die Fotos stammen von Wikimedia Commons und stehen unter freien Lizenzen. Sie wurden auf ein einheitliches Format zugeschnitten. Manche zeigen eine ähnliche Variante des Gerichts.</p>
+      <details><summary>Alle Fotos anzeigen</summary>
+        <ul class="liste nachweise">${STANDARD_REZEPTE.filter((r) => BILDER[r.id]).map((r) =>
+          `<li><strong>${esc(r.name)}:</strong> ${bildNachweis(r.id)}</li>`).join("")}</ul>
+      </details>
     </section>`;
 }
 

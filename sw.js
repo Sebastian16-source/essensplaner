@@ -1,5 +1,5 @@
 // Offline-Unterstützung: erst Netz (damit Updates sofort ankommen), sonst Cache.
-const CACHE = "essensplaner-v1";
+const CACHE = "essensplaner-v2";
 const DATEIEN = ["./", "index.html", "style.css", "data.js", "app.js", "manifest.webmanifest", "icon-180.png", "icon-512.png"];
 
 self.addEventListener("install", (ev) => {
