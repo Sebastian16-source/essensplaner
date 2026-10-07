@@ -254,7 +254,7 @@ const STANDARD_REZEPTE = [
     id: "couscous-salat", name: "Couscous-Salat mit Kichererbsen", minuten: 15, portionen: 2,
     tags: ["Schnell", "Kalt"],
     zutaten: ["Beilage: Couscous", "1 TL Gemüsebrühe", "1 Dose Kichererbsen", "½ Gurke", "100 g Feta",
-      "1 Zitrone", "2 EL Olivenöl", "1 EL TK-Kräuter"],
+      "1 Zitrone (optional)", "2 EL Olivenöl", "1 EL TK-Kräuter"],
     schritte: ["Couscous mit etwas mehr heißer Brühe übergießen (ca. 1,25-fache Menge), 5 Min quellen lassen.",
       "Gurke würfeln, Kichererbsen abgießen, Feta zerbröseln.",
       "Alles mit Zitronensaft, Öl und Kräutern mischen, abschmecken. Schmeckt auch kalt am nächsten Tag."],
@@ -292,7 +292,7 @@ const STANDARD_REZEPTE = [
     id: "kartoffel-linsen-suppe", name: "Kartoffel-Karotten-Linsen-Suppe", minuten: 30, portionen: 2,
     tags: ["Suppe"],
     zutaten: ["1 Zwiebeln", "1 Stk Lauch", "1 EL Rapsöl", "500 g Kartoffeln", "300 g Karotten",
-      "80 g Rote Linsen", "2 TL Gemüsebrühe", "200 g Hüttenkäse"],
+      "80 g Rote Linsen", "2 TL Gemüsebrühe", "200 g Hüttenkäse (optional)"],
     schritte: ["Zwiebel und Lauch schneiden und in Öl anbraten.",
       "Kartoffeln und Karotten würfeln, mit Linsen und 1 l Brühe dazu, 20 Min kochen.",
       "Pürieren und abschmecken. Dazu Brot mit Hüttenkäse."],
@@ -478,7 +478,7 @@ const STANDARD_REZEPTE = [
     id: "kichererbsen-bowl", name: "Bowl mit Ofen-Kichererbsen", minuten: 30, portionen: 2,
     tags: ["Ofen", "Reis"],
     zutaten: ["2 Dose Kichererbsen", "2 EL Rapsöl", "1 TL Paprikapulver", "Beilage: Reis", "¼ Rotkohl",
-      "150 g Karotten", "½ Gurke", "200 g Naturjoghurt", "½ Zitrone"],
+      "150 g Karotten", "½ Gurke", "200 g Naturjoghurt", "½ Zitrone (optional)"],
     schritte: ["Ofen auf 200 °C vorheizen, Reis kochen.",
       "Kichererbsen abtrocknen, mit Öl, Paprika und Salz 25 Min rösten.",
       "Rotkohl fein schneiden, Karotte reiben, Gurke würfeln.",
@@ -561,6 +561,8 @@ const STANDARD_EINSTELLUNGEN = {
     "500 g Karotten",
     "1 Gurke",
   ],
+  // Zutaten, die in jedem Rezept nur "nice to have" sind – nicht automatisch auf der Einkaufsliste
+  optional: ["Knoblauch", "Ingwer", "TK-Kräuter", "Chiliflocken", "Frühlingszwiebeln"],
   kurzbefehl: "Einkauf importieren",
 };
 

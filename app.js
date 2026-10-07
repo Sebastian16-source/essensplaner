@@ -88,9 +88,18 @@ function parseZahl(s) {
 
 // "120 g Rote Linsen" -> { menge: 120, einheit: "g", name: "Rote Linsen" }
 // "Beilage: Reis" -> Menge kommt aus den Einstellungen (siehe zutatenFuer)
+// "200 g Hüttenkäse (optional)" -> optional: true, kommt nicht automatisch auf die Einkaufsliste
 function parseZutat(zeile) {
-  const t = String(zeile).trim();
+  let t = String(zeile).trim();
   if (!t) return null;
+  const optional = /\s*\(optional\)$/i.test(t);
+  if (optional) t = t.replace(/\s*\(optional\)$/i, "");
+  const p = parseZutatKern(t);
+  if (p && optional) p.optional = true;
+  return p;
+}
+
+function parseZutatKern(t) {
   const beilage = t.match(/^beilage:\s*(.+)$/i);
   if (beilage) return { menge: null, einheit: "g", name: kanonischerName(beilage[1]), beilage: true };
   let menge = null, rest = t;
@@ -175,6 +184,8 @@ function alltagsPosten(datum) {
   ];
 }
 const ALLTAG_QUELLEN = new Set(["Frühstück", "Eiweiß-Snack", "Vor dem Training", "Wochen-Basics"]);
+// Optional ist eine Zutat, wenn sie im Rezept so markiert ist oder in deiner Liste "immer optional" steht
+const istOptional = (p) => !!p.optional || (state.einstellungen.optional || []).includes(p.name);
 const alltagsZeilen = () => {
   const e = state.einstellungen;
   return [...e.fruehstueckZutaten, ...e.snack, ...e.training, ...e.basics];
@@ -258,6 +269,7 @@ function neuerState() {
     einkauf: { wochen: 1, basics: true },
     imBlick: [],        // Frisches mit geschätztem MHD: { id, name, text, gekauft, ablauf, quelle, periode, key }
     gekauftAm: {},      // Wochenstart -> Datum, an dem für diese Woche eingekauft wurde
+    nachkaufen: {},     // Zeitraum -> [Namen]: Vorrat-Zutaten, die diesmal trotzdem auf die Liste sollen
   };
 }
 
@@ -477,11 +489,13 @@ function einkaufsliste(start, wochen, mitBasics) {
     if (!p) return;
     const key = `${p.name}|${p.einheit}`;
     let it = map.get(key);
-    if (!it) map.set(key, (it = { key, name: p.name, einheit: p.einheit, menge: 0, ohneMenge: false, quellen: new Set(), tage: [] }));
+    if (!it) map.set(key, (it = { key, name: p.name, einheit: p.einheit, menge: 0, ohneMenge: false, quellen: new Set(), tage: [], pflicht: false }));
     if (p.menge == null) it.ohneMenge = true;
     else it.menge += p.menge;
     it.quellen.add(quelle);
     if (datum) it.tage.push(datum);
+    // Frühstück & Basics sind nie optional; in Rezepten zählt die Markierung bzw. deine Optional-Liste
+    if (!datum || !istOptional(p)) it.pflicht = true;
   };
   for (let t = 0; t < 7 * wochen; t++) {
     const d = addTage(start, t);
@@ -498,10 +512,19 @@ function einkaufsliste(start, wochen, mitBasics) {
   }
 
   const idx = zutatenIndex();
-  const kaufen = [], ausVorrat = [];
+  const kaufen = [], ausVorrat = [], optional = [];
+  const nachkaufen = new Set(state.nachkaufen[`${start}_${wochen}`] || []);
   for (const it of map.values()) {
     const v = state.vorrat[it.name];
+    // Nur optional gebraucht: Ist sie im Vorrat, ist alles gut – sonst nur auf Wunsch auf die Liste
+    if (!it.pflicht) {
+      if (v) continue;
+      if (nachkaufen.has(it.name)) { it.nachkauf = true; it.hinweis = "optional"; kaufen.push(it); }
+      else optional.push(it);
+      continue;
+    }
     if (!v) { kaufen.push(it); continue; }
+    if (nachkaufen.has(it.name)) { it.nachkauf = true; it.hinweis = "Grundvorrat auffüllen"; kaufen.push(it); continue; }
     if (v.menge == null) { it.vorratText = "genug da"; ausVorrat.push(it); continue; }
     const vEinheit = v.einheit || haupteinheit(it.name, idx);
     if (vEinheit !== it.einheit) { it.hinweis = "Vorrat prüfen"; kaufen.push(it); continue; }
@@ -510,13 +533,15 @@ function einkaufsliste(start, wochen, mitBasics) {
     if (fehlt <= 0.001) ausVorrat.push(it);
     else kaufen.push({ ...it, menge: fehlt, hinweis: `${fmtMenge(v.menge, vEinheit)} im Vorrat` });
   }
-  return { kaufen, ausVorrat };
+  return { kaufen, ausVorrat, optional };
 }
 
 // Kaufmenge sinnvoll aufrunden: ganze Packungen, Dosen und Stück, sonst Gramm auf 10er.
 // "rest" ist, was danach voraussichtlich übrig bleibt (in der Einheit der Zutat).
 function kaufMenge(it) {
   if (!it.menge) return { text: "", notiz: "", rest: 0 };
+  // Gewürze & Co. kauft man als Packung, nicht in Teelöffeln
+  if (it.nachkauf && ["EL", "TL", "Prise", "Zehe"].includes(it.einheit)) return { text: "", notiz: "", rest: 0 };
   const m = it.menge;
   const pack = PACKUNGEN[it.name];
   if (pack && pack[1] === it.einheit) {
@@ -555,7 +580,7 @@ function frischeWarnungen(datum, r) {
   for (const z of r.zutaten) {
     const p = parseZutat(z);
     const h = p && HALTBARKEIT[p.name];
-    if (!h || state.vorrat[p.name] || alter <= h[0] || liste.some((x) => x.name === p.name)) continue;
+    if (!h || istOptional(p) || state.vorrat[p.name] || alter <= h[0] || liste.some((x) => x.name === p.name)) continue;
     liste.push({ name: p.name, tage: h[0] });
   }
   return { alter, liste };
@@ -990,7 +1015,7 @@ function renderDetail() {
       </div>
     </div>
     <ul class="zutaten">${zutatenFuer(r, p).map((pz) =>
-      `<li>${esc(fmtZutat(pz))}${pz.beilage ? ` <span class="slot-meta">· Beilage, ${beilageProPortion(pz.name)} g pro Portion</span>` : ""}</li>`).join("")}</ul>
+      `<li${istOptional(pz) ? ` class="optional"` : ""}>${esc(fmtZutat(pz))}${pz.beilage ? ` <span class="slot-meta">· Beilage, ${beilageProPortion(pz.name)} g pro Portion</span>` : ""}${istOptional(pz) ? ` <span class="slot-meta">· optional</span>` : ""}</li>`).join("")}</ul>
     <h3>Zubereitung</h3>
     ${p !== r.portionen ? `<p class="hinweis">Mengen im Text gelten für ${r.portionen} Portionen.</p>` : ""}
     <ol class="schritte">${r.schritte.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
@@ -1033,7 +1058,8 @@ function editorOeffnen(id) {
       <label>Tags <small>(mit Komma getrennt, z. B. Pasta, Ofen, Sport)</small>
         <input name="tags" value="${esc(r.tags.join(", "))}"></label>
       <label>Zutaten <small>(eine pro Zeile: Menge, Einheit, Zutat – z. B. „120 g Rote Linsen“, „1 Dose Kichererbsen“.
-        Für Nudeln, Reis, Couscous oder Kartoffeln als Beilage: „Beilage: Reis“ – die Menge kommt dann aus den Einstellungen.)</small>
+        Für Nudeln, Reis, Couscous oder Kartoffeln als Beilage: „Beilage: Reis“ – die Menge kommt dann aus den Einstellungen.
+        Nice to have: „(optional)“ ans Ende, z. B. „1 Zehe Knoblauch (optional)“.)</small>
         <textarea name="zutaten" rows="8" data-input="zutaten-vorschau">${esc(r.zutaten.join("\n"))}</textarea></label>
       <ul class="vorschau" id="zutaten-vorschau"></ul>
       <label>Zubereitung <small>(ein Schritt pro Zeile)</small>
@@ -1052,7 +1078,7 @@ function zutatenVorschau(textarea) {
     const neu = !KATALOG[p.name];
     if (p.beilage) p = { ...p, menge: beilageProPortion(p.name) };
     const ohneNw = p.menge != null && !zutatGramm(p);
-    const info = (p.beilage ? "Beilage pro Portion · " : "")
+    const info = (p.beilage ? "Beilage pro Portion · " : "") + (istOptional(p) ? "optional · " : "")
       + (neu ? "neu · Sonstiges · ohne Nährwerte" : esc(kategorie(p.name)) + (ohneNw ? " · ohne Nährwerte" : ""));
     return `<li><span>${esc(fmtZutat(p))}</span><span class="kat${neu || ohneNw ? " neu" : ""}">${info}</span></li>`;
   }).join("");
@@ -1063,7 +1089,7 @@ function zutatenVorschau(textarea) {
 function renderEinkauf() {
   const { wochen, basics } = state.einkauf;
   const s = ui.einkaufStart;
-  const { kaufen, ausVorrat } = einkaufsliste(s, wochen, basics);
+  const { kaufen, ausVorrat, optional } = einkaufsliste(s, wochen, basics);
   const ab = state.abgehakt[periodeKey()] || {};
   const offen = kaufen.filter((it) => !ab[it.key]).length + state.extras.filter((x) => !ab[`extra:${x.id}`]).length;
 
@@ -1089,6 +1115,23 @@ function renderEinkauf() {
       </div>
     </div>`;
 
+  // Grundvorrat gut sichtbar oben: Die App nimmt diese Zutaten als vorhanden an
+  if (ausVorrat.length) {
+    const sortiert = ausVorrat.sort(sortiereNachKategorie);
+    html += `<div class="karte vorrat-check">
+      <strong>Aus deinem Grundvorrat (${ausVorrat.length})</strong>
+      <p class="hinweis">Stehen nicht auf der Liste, weil die App sie als vorhanden annimmt. Hast du alles da?</p>
+      <p class="vorrat-namen">${esc(sortiert.map((it) => it.name).join(", "))}</p>
+      <details><summary>Einzeln prüfen</summary>
+        <ul>${sortiert.map((it) => `<li>
+            <span>${esc(it.name)} <span class="slot-meta">· ${esc(fmtMenge(it.menge, it.einheit) || "etwas")} gebraucht</span></span>
+            <button class="btn klein" data-action="nachkaufen" data-name="${esc(it.name)}">Fehlt</button>
+          </li>`).join("")}</ul>
+      </details>
+      <div class="aktionen"><button class="btn klein" data-action="alles-nachkaufen">Alles auf die Liste</button></div>
+    </div>`;
+  }
+
   if (!kaufen.length && !state.extras.length) {
     html += `<p class="leer-hinweis">Für diesen Zeitraum ist noch nichts zu kaufen.<br>
       <button class="link-btn" data-action="tab" data-tab="plan">Zum Wochenplan</button></p>`;
@@ -1107,8 +1150,24 @@ function renderEinkauf() {
             <span class="ez-text"><span class="ez-name">${esc(it.name)}</span>
               <span class="ez-quelle">${esc(quellen)}${notizen ? ` · <em>${esc(notizen)}</em>` : ""}</span></span>
             <span class="ez-menge">${esc(km.text)}</span>
+            ${it.nachkauf ? `<button class="icon-btn klein" data-action="nachkaufen-weg" data-name="${esc(it.name)}"
+              aria-label="Doch vorhanden, von der Liste nehmen" title="Doch vorhanden">×</button>` : ""}
           </label></li>`;
     }).join("")}</ul>`;
+  }
+
+  if (optional.length) {
+    html += `<details class="karte optional-check">
+      <summary>Optional (${optional.length}): ${esc(optional.sort(sortiereNachKategorie).map((it) => it.name).join(", "))}</summary>
+      <p class="hinweis">Nice to have – kommt nur auf die Liste, wenn du es willst.</p>
+      <ul>${optional.map((it) => {
+        const km = kaufMenge(it);
+        return `<li>
+          <span>${esc(it.name)} <span class="slot-meta">· ${esc([km.text, [...it.quellen].join(", ")].filter(Boolean).join(" · "))}</span></span>
+          <button class="btn klein" data-action="nachkaufen" data-name="${esc(it.name)}">+ Liste</button>
+        </li>`;
+      }).join("")}</ul>
+    </details>`;
   }
 
   html += `<h3 class="kat-titel">Zusätzlich</h3>
@@ -1124,15 +1183,6 @@ function renderEinkauf() {
       <input name="text" placeholder="z. B. Spülmittel, Kaffee" autocomplete="off">
       <button class="btn">Hinzufügen</button>
     </form>`;
-
-  if (ausVorrat.length) {
-    html += `<details class="karte vorrat-check">
-      <summary>Aus dem Vorrat (${ausVorrat.length}) – kurz prüfen</summary>
-      <ul>${ausVorrat.sort(sortiereNachKategorie).map((it) =>
-        `<li><span>${esc(it.name)}</span><span class="ez-menge">${esc(fmtMenge(it.menge, it.einheit) || "etwas")} · ${esc(it.vorratText)}</span></li>`).join("")}</ul>
-      <p class="hinweis">Falls etwas fehlt: im Tab „Vorrat“ abhaken, dann landet es hier auf der Liste.</p>
-    </details>`;
-  }
 
   html += `<div class="aktionen">
       <button class="btn" data-action="alles-gekauft">Alles als gekauft markieren</button>
@@ -1264,6 +1314,12 @@ function renderMehr() {
         <textarea rows="2" data-change="alltag" data-feld="snack">${esc(e.snack.join("\n"))}</textarea></label>
       <label class="feld">Vor dem Training, nur an Sporttagen
         <textarea rows="2" data-change="alltag" data-feld="training">${esc(e.training.join("\n"))}</textarea></label>
+    </section>
+
+    <section class="karte">
+      <h2>Optionale Zutaten</h2>
+      <p class="hinweis">Nice to have statt Pflicht: Diese Zutaten kommen in keinem Rezept automatisch auf die Einkaufsliste, sondern in den Bereich „Optional“, aus dem du sie bei Bedarf dazuholst. Eine Zutat pro Zeile. Einzelne Rezeptzutaten markierst du im Rezept mit „(optional)“.</p>
+      <textarea rows="5" data-change="optional-liste">${esc((e.optional || []).join("\n"))}</textarea>
     </section>
 
     <section class="karte">
@@ -1446,6 +1502,25 @@ const AKTIONEN = {
     speichernRender();
     toast("Als gekauft markiert");
   },
+  // Vorrat-Zutat fehlt: nur für diesen Einkauf auf die Liste, im Vorrat bleibt sie "vorhanden"
+  nachkaufen: (d) => {
+    const liste = (state.nachkaufen[periodeKey()] ||= []);
+    if (!liste.includes(d.name)) liste.push(d.name);
+    speichernRender();
+    toast(`${d.name} steht jetzt auf der Liste`);
+  },
+  "alles-nachkaufen": () => {
+    const { ausVorrat } = einkaufsliste(ui.einkaufStart, state.einkauf.wochen, state.einkauf.basics);
+    const liste = (state.nachkaufen[periodeKey()] ||= []);
+    ausVorrat.forEach((it) => { if (!liste.includes(it.name)) liste.push(it.name); });
+    speichernRender();
+    toast(`${ausVorrat.length} Zutaten aus dem Grundvorrat auf der Liste`);
+  },
+  "nachkaufen-weg": (d) => {
+    const pk = periodeKey();
+    state.nachkaufen[pk] = (state.nachkaufen[pk] || []).filter((n) => n !== d.name);
+    speichernRender();
+  },
   "blick-weg": (d) => { state.imBlick = state.imBlick.filter((x) => x.id !== d.id); speichernRender(); },
 
   // Vorrat & Daten
@@ -1508,6 +1583,11 @@ const AENDERUNGEN = {
     speichern();
   },
   fruehstueck: (el) => { state.einstellungen.fruehstueck = el.value.trim(); speichern(); toast("Gespeichert"); },
+  "optional-liste": (el) => {
+    state.einstellungen.optional = el.value.split("\n").map((z) => z.trim()).filter(Boolean).map(kanonischerName);
+    speichern();
+    toast("Gespeichert");
+  },
   alltag: (el) => {
     state.einstellungen[el.dataset.feld] = el.value.split("\n").map((z) => z.trim()).filter(Boolean);
     speichern();

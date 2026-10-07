@@ -17,8 +17,10 @@ self.addEventListener("activate", (ev) => {
 self.addEventListener("fetch", (ev) => {
   const req = ev.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+  // cache: "no-cache" fragt jedes Mal kurz beim Server nach (GitHub Pages erlaubt sonst 10 Min. alte Dateien),
+  // damit nach einem Update nicht alte und neue Dateien gemischt werden
   ev.respondWith(
-    fetch(req)
+    fetch(req, { cache: "no-cache" })
       .then((res) => {
         const kopie = res.clone();
         caches.open(CACHE).then((c) => c.put(req, kopie));

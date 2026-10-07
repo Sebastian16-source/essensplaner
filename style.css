@@ -426,8 +426,17 @@ details summary { cursor: pointer; color: var(--akzent); font-weight: 500; margi
 .vorrat .menge-input:disabled { opacity: 0.35; }
 .vorrat .einheit { width: 44px; font-size: 0.82rem; color: var(--leise); }
 
+.vorrat-check { border-color: var(--kh); }
+.vorrat-check .hinweis { margin: 2px 0 6px; }
+.vorrat-namen { margin: 0 0 4px; font-size: 0.92rem; }
 .vorrat-check ul { list-style: none; padding: 0; margin: 10px 0 0; }
-.vorrat-check li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 0.92rem; }
+.vorrat-check li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; font-size: 0.92rem; }
+.vorrat-check .aktionen { margin: 10px 0 0; }
+.optional-check { margin-top: 16px; }
+.optional-check summary { color: var(--text); font-weight: 500; margin: 0; }
+.optional-check ul { list-style: none; padding: 0; margin: 8px 0 0; }
+.optional-check li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; font-size: 0.92rem; }
+.zutaten li.optional { color: var(--leise); }
 
 /* ---------- Modal & Toast ---------- */
 
