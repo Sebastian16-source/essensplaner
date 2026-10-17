@@ -65,6 +65,22 @@ Ohne Kurzbefehl: „Kopieren“ in der App, dann in Erinnerungen in einen neuen 
 
 Zutaten werden als Text geschrieben: `Menge Einheit Zutat`, z. B. `120 g Rote Linsen`, `1 Dose Kichererbsen`, `½ Gurke`. Bekannte Einheiten: g, kg, ml, l, Stk, Dose, Bund, EL, TL, Prise, Zehe, Kugel, Packung, Glas, Becher, Scheibe. Neue Zutaten, die nicht im Katalog in `data.js` stehen, landen in der Einkaufsliste unter „Sonstiges“. Für eine feste Kategorie trägst du sie in `KATALOG` ein.
 
+## Preise
+
+`PREISE` in `data.js` enthält geschätzte Packungspreise auf Discounter-Niveau (Stand 2026). Die App zeigt damit die Kosten pro Portion (anteilig, also nur was im Topf landet) und in der Einkaufsliste den ungefähren Betrag an der Kasse (ganze Packungen). Weichen deine Preise ab, die Werte dort einfach anpassen.
+
+## Werkzeuge (nur für die Pflege, nicht hochladen)
+
+Im Ordner `werkzeuge/`:
+
+| Datei | Zweck |
+|---|---|
+| `pruefen.js` | `node werkzeuge/pruefen.js` – prüft alle Rezepte (Katalog, Nährwerte, Preise, Fotos) und zeigt eine Tabelle mit kcal, Eiweiß und Kosten pro Portion |
+| `fotos-suchen.js` | sucht frei lizenzierte Fotos auf Wikimedia Commons und lädt Vorschauen |
+| `kontaktbogen.ps1` | legt die Vorschauen nebeneinander, um eins auszuwählen |
+| `fotos-uebernehmen.js` | lädt die ausgewählten Fotos und trägt die Bildnachweise in `data.js` ein |
+| `zuschneiden.ps1` | schneidet die Fotos auf 3:2 zu und legt sie in `bilder/` |
+
 ## Ideen für später
 
 - Rezepte per KI erzeugen (z. B. Claude API) mit strukturierter Zutatenliste, damit sie direkt in die Einkaufsliste passen.

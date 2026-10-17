@@ -220,6 +220,35 @@ function naehrwerteListe(zutaten) {
 // Nährwerte pro Portion
 const naehrwerte = (r, sportAbend = false) => naehrwerteListe(zutatenFuer(r, 1, sportAbend));
 
+// ================= Preise =================
+
+const grammVon = (name, menge, einheit) => menge * (NAEHRWERTE[name]?.[einheit] ?? EINHEIT_GRAMM[einheit] ?? 0);
+// Wie viele Packungen (als Bruchteil) entsprechen dieser Menge? null, wenn kein Preis hinterlegt ist
+function packungsAnteil(name, menge, einheit) {
+  const pr = PREISE[name];
+  if (!pr || menge == null) return null;
+  if (pr[1] === einheit) return menge / pr[0];
+  const g = grammVon(name, menge, einheit), gp = grammVon(name, pr[0], pr[1]);
+  return g && gp ? g / gp : null;
+}
+// Kosten pro Portion: nur der Anteil, der im Topf landet
+function portionsPreis(r) {
+  let euro = 0;
+  const ohne = [];
+  for (const p of zutatenFuer(r, 1)) {
+    if (p.menge == null) continue;
+    const anteil = packungsAnteil(p.name, p.menge, p.einheit);
+    if (anteil == null) ohne.push(p.name); else euro += anteil * PREISE[p.name][2];
+  }
+  return { euro, ohne };
+}
+// Preis an der Kasse: angebrochene Packungen zählen voll
+function kassenPreis(it) {
+  const anteil = packungsAnteil(it.name, it.menge, it.einheit);
+  return anteil == null ? null : Math.max(1, Math.ceil(anteil - 0.05)) * PREISE[it.name][2];
+}
+const euroDe = (x) => x.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+
 const zahlDe = (x) => Math.round(x).toLocaleString("de-DE");
 const nwKurz = (nw) => `${zahlDe(nw.kcal)} kcal · ${zahlDe(nw.eiweiss)} g Eiweiß`;
 
@@ -967,7 +996,7 @@ function rezeptZeile(r, aktion, extra = "") {
       ${bildKlein(r)}
       <span class="rz-text">
         <span class="rz-name">${esc(r.name)}</span>
-        <span class="rz-meta">${r.minuten} Min · ${nwKurz(naehrwerte(r))}${tags.length ? " · " + esc(tags.join(", ")) : ""}${extra}</span>
+        <span class="rz-meta">${r.minuten} Min · ${nwKurz(naehrwerte(r))} · ca. ${euroDe(portionsPreis(r).euro)}${tags.length ? " · " + esc(tags.join(", ")) : ""}${extra}</span>
       </span>
     </button>`;
 }
@@ -1006,6 +1035,8 @@ function renderDetail() {
       <figcaption>${bildNachweis(r.id)}</figcaption></figure>` : ""}
     <p class="rz-meta">${r.minuten} Min${tags.length ? " · " + esc(tags.join(", ")) : ""}</p>
     ${renderNaehrwerte(naehrwerte(r))}
+    <p class="slot-meta">Kosten: ca. <strong>${euroDe(portionsPreis(r).euro)} pro Portion</strong> (anteilig, Discounter-Preise)${
+      portionsPreis(r).ohne.length ? ` · ohne Preis: ${esc([...new Set(portionsPreis(r).ohne)].join(", "))}` : ""}</p>
     <div class="detail-portionen">
       <span>Zutaten für</span>
       <div class="stepper">
@@ -1092,6 +1123,8 @@ function renderEinkauf() {
   const { kaufen, ausVorrat, optional } = einkaufsliste(s, wochen, basics);
   const ab = state.abgehakt[periodeKey()] || {};
   const offen = kaufen.filter((it) => !ab[it.key]).length + state.extras.filter((x) => !ab[`extra:${x.id}`]).length;
+  const kasse = kaufen.reduce((s, it) => s + (kassenPreis(it) ?? 0), 0);
+  const ohnePreis = kaufen.filter((it) => kassenPreis(it) == null).length + state.extras.length;
 
   let html = `
     <div class="periodennav">
@@ -1108,7 +1141,8 @@ function renderEinkauf() {
       <label class="schalter"><input type="checkbox" data-change="einkauf-basics"${basics ? " checked" : ""}> Frühstück & Basics</label>
     </div>
     <div class="export karte">
-      <span><strong id="offen-zahl">${offen}</strong> Artikel offen</span>
+      <span><strong id="offen-zahl">${offen}</strong> Artikel offen
+        ${kasse ? `<br><span class="slot-meta">Einkauf ca. ${euroDe(kasse)}${ohnePreis ? ` (+ ${ohnePreis} ohne Preis)` : ""}</span>` : ""}</span>
       <div class="export-knoepfe">
         <button class="btn primaer" data-action="erinnerungen">In Erinnerungen</button>
         <button class="btn" data-action="kopieren">Kopieren</button>

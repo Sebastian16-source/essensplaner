@@ -36,6 +36,7 @@ const KATALOG = {
   "Zucchini": ["Obst & Gemüse", false],
   "Äpfel": ["Obst & Gemüse", false],
   "Bananen": ["Obst & Gemüse", false],
+  "Kirschtomaten": ["Obst & Gemüse", false],
 
   "Vollkornbrot": ["Brot & Backwaren", false],
   "Vollkornwraps": ["Brot & Backwaren", false],
@@ -54,6 +55,7 @@ const KATALOG = {
   "Parmesan": ["Kühlregal", true],
   "Tofu natur": ["Kühlregal", false],
   "Räuchertofu": ["Kühlregal", false],
+  "Gnocchi": ["Kühlregal", false],
 
   "TK-Gemüsemischung": ["Tiefkühl", false],
   "TK-Blattspinat": ["Tiefkühl", false],
@@ -124,6 +126,7 @@ const NAEHRWERTE = {
   "Zucchini": { n: [19, 1.6, 2.1, 0.4, 1.1], Stk: 250 },
   "Äpfel": { n: [54, 0.3, 11.4, 0.4, 2], Stk: 150 },
   "Bananen": { n: [93, 1.1, 20, 0.2, 1.8], Stk: 120 },
+  "Kirschtomaten": { n: [20, 1, 3, 0.2, 1.3] },
 
   "Vollkornbrot": { n: [220, 7, 39, 1.2, 8], Stk: 750, Scheibe: 50 },
   "Vollkornwraps": { n: [300, 9, 48, 7, 6], Stk: 62 },
@@ -142,6 +145,7 @@ const NAEHRWERTE = {
   "Parmesan": { n: [390, 33, 0, 28, 0] },
   "Tofu natur": { n: [125, 13, 1.5, 7.5, 0.5] },
   "Räuchertofu": { n: [150, 16, 1.5, 9, 0.5] },
+  "Gnocchi": { n: [155, 3.8, 33, 0.6, 1.8] },
 
   "TK-Gemüsemischung": { n: [40, 2, 6, 0.4, 3] },
   "TK-Blattspinat": { n: [20, 2.5, 0.6, 0.4, 2] },
@@ -195,7 +199,7 @@ const HALTBARKEIT = {
   "Hokkaido-Kürbis": [30, 5], "Kartoffeln": [21], "Karotten": [14], "Paprika": [7], "Gurke": [7, 2],
   "Lauch": [7, 4], "Brokkoli": [4], "Zitrone": [14, 4], "Champignons": [3], "Weißkohl": [21, 7],
   "Spitzkohl": [10, 5], "Rotkohl": [21, 7], "Kopfsalat": [4, 2], "Frühlingszwiebeln": [5], "Ingwer": [21, 14],
-  "Zucchini": [7, 3], "Äpfel": [21], "Bananen": [6],
+  "Zucchini": [7, 3], "Äpfel": [21], "Bananen": [6], "Kirschtomaten": [7], "Gnocchi": [30, 3],
   "Vollkornbrot": [5], "Vollkornwraps": [14, 5], "Fladenbrot": [2], "Vollkornbrötchen": [2],
   "Eier": [21], "Magerquark": [14, 3], "Skyr": [14, 3], "Naturjoghurt": [14, 4], "Milch": [7, 3],
   "Hüttenkäse": [10, 3], "Feta": [30, 5], "Mozzarella": [14, 2], "Geriebener Käse": [21, 5],
@@ -211,6 +215,46 @@ const PACKUNGEN = {
   "Naturjoghurt": [500, "g"], "Hüttenkäse": [200, "g"], "Tofu natur": [200, "g"], "Räuchertofu": [200, "g"],
   "Geriebener Käse": [200, "g"], "Passierte Tomaten": [500, "g"], "TK-Blattspinat": [450, "g"],
   "TK-Erbsen": [450, "g"], "TK-Gemüsemischung": [750, "g"], "Milch": [1000, "ml"], "Vollkornwraps": [6, "Stk"],
+  "Kirschtomaten": [250, "g"], "Gnocchi": [500, "g"],
+};
+
+// Geschätzte Preise je Packung [Menge, Einheit, Euro] – typisches Discounter-Niveau (Aldi/Lidl), Stand 2026.
+// Grobe Richtwerte zum Planen; Angebote und Markenware weichen ab. Hier anpassen, wenn du andere Preise zahlst.
+const PREISE = {
+  "Hokkaido-Kürbis": [1, "Stk", 1.99], "Kartoffeln": [2500, "g", 2.49], "Karotten": [1000, "g", 1.09],
+  "Paprika": [3, "Stk", 1.99], "Gurke": [1, "Stk", 0.79], "Lauch": [1, "Stk", 0.79], "Zwiebeln": [2000, "g", 1.99],
+  "Knoblauch": [120, "g", 1.29], "Brokkoli": [1, "Stk", 1.49], "Zitrone": [5, "Stk", 1.29],
+  "Champignons": [250, "g", 1.29], "Weißkohl": [1, "Stk", 1.49], "Spitzkohl": [1, "Stk", 1.49],
+  "Rotkohl": [1, "Stk", 1.29], "Kopfsalat": [1, "Stk", 0.99], "Frühlingszwiebeln": [1, "Bund", 0.69],
+  "Ingwer": [1000, "g", 6.99], "Zucchini": [1, "Stk", 0.59], "Äpfel": [7, "Stk", 1.99], "Bananen": [6, "Stk", 1.39],
+  "Kirschtomaten": [250, "g", 1.29],
+
+  "Vollkornbrot": [750, "g", 1.99], "Vollkornwraps": [6, "Stk", 1.49], "Fladenbrot": [1, "Stk", 1.29],
+  "Vollkornbrötchen": [6, "Stk", 1.49],
+
+  "Eier": [10, "Stk", 2.69], "Magerquark": [500, "g", 1.09], "Skyr": [500, "g", 1.39], "Naturjoghurt": [500, "g", 0.89],
+  "Milch": [1000, "ml", 1.09], "Hüttenkäse": [200, "g", 0.99], "Feta": [200, "g", 1.79], "Mozzarella": [1, "Kugel", 0.89],
+  "Geriebener Käse": [200, "g", 1.79], "Parmesan": [200, "g", 3.29], "Tofu natur": [200, "g", 1.29],
+  "Räuchertofu": [200, "g", 1.49], "Gnocchi": [500, "g", 1.29],
+
+  "TK-Gemüsemischung": [750, "g", 1.79], "TK-Blattspinat": [450, "g", 1.09], "TK-Erbsen": [450, "g", 1.09],
+  "TK-Beeren": [750, "g", 3.49], "TK-Kräuter": [75, "g", 1.19],
+
+  "Passierte Tomaten": [500, "g", 0.59], "Stückige Tomaten": [1, "Dose", 0.69], "Kichererbsen": [1, "Dose", 0.89],
+  "Kidneybohnen": [1, "Dose", 0.79], "Mais": [1, "Dose", 0.89], "Weiße Bohnen": [1, "Dose", 0.79],
+  "Kokosmilch": [1, "Dose", 1.29],
+
+  "Vollkornspaghetti": [500, "g", 1.19], "Vollkornpenne": [500, "g", 1.19], "Reis": [1000, "g", 1.79],
+  "Couscous": [500, "g", 1.29], "Haferflocken": [500, "g", 0.79], "Vollkornmehl": [1000, "g", 1.19],
+  "Rote Linsen": [500, "g", 1.79], "Tellerlinsen": [500, "g", 1.49],
+
+  "Rapsöl": [1000, "ml", 2.29], "Olivenöl": [500, "ml", 5.49], "Gemüsebrühe": [200, "g", 1.49], "Salz": [500, "g", 0.39],
+  "Pfeffer": [50, "g", 1.49], "Paprikapulver": [100, "g", 1.29], "Kreuzkümmel": [40, "g", 1.29],
+  "Currypulver": [50, "g", 1.29], "Italienische Kräuter": [20, "g", 1.19], "Chiliflocken": [35, "g", 1.29],
+  "Kümmel": [50, "g", 1.19], "Tomatenmark": [200, "g", 0.99], "Sojasauce": [250, "ml", 1.49],
+  "Erdnussbutter": [350, "g", 2.29], "Senf": [250, "g", 0.69], "Honig": [500, "g", 3.99], "Essig": [750, "ml", 0.89],
+
+  "Walnüsse": [200, "g", 2.79], "Leinsamen": [500, "g", 1.49],
 };
 
 // Gramm je Einheit, falls bei der Zutat nichts anderes steht
@@ -509,6 +553,114 @@ const STANDARD_REZEPTE = [
       "Eier verquirlen, salzen, dazugeben und bei mittlerer Hitze stocken lassen.",
       "Mit Brot essen."],
   },
+
+  // ---- Schnell & günstig (Oktober 2026) ----
+  {
+    id: "pasta-e-ceci", name: "Pasta e ceci", minuten: 20, portionen: 2,
+    tags: ["Pasta", "Schnell", "Sport"],
+    zutaten: ["1 Zwiebeln", "1 Zehe Knoblauch", "1 EL Olivenöl", "1 EL Tomatenmark", "1 Dose Kichererbsen",
+      "1 Dose Stückige Tomaten", "1 TL Gemüsebrühe", "1 TL Italienische Kräuter", "Beilage: Vollkornpenne", "30 g Parmesan"],
+    schritte: ["Nudeln kochen, eine Tasse Nudelwasser aufheben.",
+      "Zwiebel und Knoblauch hacken, in Öl anbraten, Tomatenmark kurz mitrösten.",
+      "Kichererbsen samt etwas Dosenwasser, Tomaten, 150 ml Wasser, Brühe und Kräuter dazu, 8 Min köcheln. Ein Drittel der Kichererbsen mit der Gabel zerdrücken, das macht die Soße sämig.",
+      "Nudeln mit etwas Nudelwasser unterheben, mit Parmesan und Pfeffer servieren."],
+  },
+  {
+    id: "erbsen-quark-pasta", name: "Erbsen-Quark-Pasta", minuten: 15, portionen: 2,
+    tags: ["Pasta", "Schnell", "Sport"],
+    zutaten: ["Beilage: Vollkornpenne", "300 g TK-Erbsen", "250 g Magerquark", "40 g Parmesan", "1 Zehe Knoblauch",
+      "1 EL Olivenöl", "½ Zitrone (optional)"],
+    schritte: ["Nudeln kochen, die Erbsen 3 Min vor Ende mit in den Topf geben. Eine Tasse Nudelwasser aufheben.",
+      "Quark mit geriebenem Parmesan, gepresstem Knoblauch, Öl, etwas Zitronenabrieb, Salz, Pfeffer und 100 ml Nudelwasser glatt rühren.",
+      "Nudeln und Erbsen abgießen und sofort mit der Quarksoße mischen – nicht mehr kochen, sonst flockt der Quark."],
+  },
+  {
+    id: "spinat-kartoffeln-ei", name: "Spinat mit Kartoffeln und Spiegelei", minuten: 25, portionen: 2,
+    tags: ["Eier", "Sport"],
+    zutaten: ["Beilage: Kartoffeln", "450 g TK-Blattspinat", "1 Zwiebeln", "1 Zehe Knoblauch", "1 EL Rapsöl",
+      "50 g Magerquark", "4 Eier"],
+    schritte: ["Kartoffeln schälen und in Salzwasser ca. 20 Min kochen.",
+      "Zwiebel und Knoblauch fein hacken, in einem Topf in wenig Öl anschwitzen, Spinat dazu und mit Deckel bei mittlerer Hitze auftauen lassen.",
+      "Spinat mit Quark, Salz und Pfeffer cremig rühren.",
+      "Im restlichen Öl Spiegeleier braten und alles zusammen servieren."],
+  },
+  {
+    id: "tomaten-bohnen-suppe", name: "Tomaten-Bohnen-Suppe mit Brot", minuten: 15, portionen: 2,
+    tags: ["Suppe", "Schnell"],
+    zutaten: ["1 Zwiebeln", "1 Zehe Knoblauch", "1 EL Olivenöl", "500 g Passierte Tomaten", "1 Dose Weiße Bohnen",
+      "2 TL Gemüsebrühe", "1 TL Italienische Kräuter", "1 TL Paprikapulver", "4 Scheibe Vollkornbrot (optional)",
+      "30 g Parmesan (optional)"],
+    schritte: ["Zwiebel und Knoblauch würfeln und in Öl glasig dünsten.",
+      "Passierte Tomaten, 400 ml Wasser, Brühe und Gewürze dazu, aufkochen.",
+      "Bohnen abspülen, dazugeben, 5 Min köcheln. Wer mag, die Hälfte pürieren, dann wird die Suppe cremig.",
+      "Mit Parmesan und Brot servieren."],
+  },
+  {
+    id: "nudelsuppe-ei", name: "Asiatische Nudelsuppe mit Ei", minuten: 15, portionen: 2,
+    tags: ["Suppe", "Schnell", "Eier"],
+    zutaten: ["160 g Vollkornspaghetti", "400 g TK-Gemüsemischung", "4 Eier", "3 EL Sojasauce", "3 TL Gemüsebrühe",
+      "10 g Ingwer", "1 Zehe Knoblauch", "½ Bund Frühlingszwiebeln", "1 Prise Chiliflocken"],
+    schritte: ["1 l Wasser mit Brühe, Sojasauce, geriebenem Ingwer und Knoblauch aufkochen.",
+      "Eier in einem zweiten Topf 7 Min wachsweich kochen, abschrecken und schälen.",
+      "Spaghetti gebrochen in die Brühe geben und 7 Min kochen, das TK-Gemüse die letzten 4 Min mitgaren.",
+      "In Schalen füllen, halbierte Eier, Frühlingszwiebeln und Chili drauf."],
+  },
+  {
+    id: "tofu-ruehrei", name: "Tofu-Rührei mit Spinat", minuten: 10, portionen: 2,
+    tags: ["Pfanne", "Schnell"],
+    zutaten: ["400 g Tofu natur", "1 Zwiebeln", "1 EL Rapsöl", "225 g TK-Blattspinat", "1 TL Paprikapulver",
+      "1 TL Currypulver", "2 EL Sojasauce", "4 Scheibe Vollkornbrot (optional)"],
+    schritte: ["Zwiebel würfeln und in Öl anbraten.",
+      "Tofu mit der Gabel zerbröseln, dazugeben und 5 Min braten, bis er leicht gebräunt ist.",
+      "Paprikapulver, Curry (für die gelbe Farbe) und Sojasauce unterrühren, Spinat dazu und erhitzen, bis er aufgetaut ist.",
+      "Mit Pfeffer abschmecken, dazu Vollkornbrot."],
+  },
+  {
+    id: "mujaddara", name: "Mujaddara – Linsenreis mit Röstzwiebeln", minuten: 30, portionen: 2,
+    tags: ["Reis", "Sport"],
+    zutaten: ["150 g Tellerlinsen", "150 g Reis", "3 Zwiebeln", "3 EL Olivenöl", "1 TL Kreuzkümmel", "1 TL Gemüsebrühe",
+      "250 g Naturjoghurt", "½ Gurke (optional)"],
+    schritte: ["Linsen in reichlich Wasser 10 Min vorkochen.",
+      "Reis, Kreuzkümmel und Brühe dazugeben, so viel Wasser, dass alles gut 1 cm bedeckt ist. Mit Deckel 15–18 Min leise köcheln, bis Reis und Linsen weich sind.",
+      "Währenddessen die Zwiebeln in Ringe schneiden und im Öl bei mittlerer Hitze 15 Min langsam goldbraun braten.",
+      "Linsenreis salzen, Röstzwiebeln drauf, mit Joghurt (und Gurkenwürfeln) servieren."],
+  },
+  {
+    id: "hummus-wraps", name: "Hummus-Gemüse-Wraps", minuten: 10, portionen: 2,
+    tags: ["Schnell", "Kalt"],
+    zutaten: ["1 Dose Kichererbsen", "2 EL Olivenöl", "½ Zitrone", "1 Zehe Knoblauch", "1 TL Kreuzkümmel",
+      "4 Stk Vollkornwraps", "½ Gurke", "150 g Karotten", "100 g Feta"],
+    schritte: ["Kichererbsen abgießen (etwas Wasser auffangen) und mit Öl, Zitronensaft, Knoblauch, Kreuzkümmel, Salz und 2–3 EL Kichererbsenwasser pürieren – ohne Pürierstab mit der Gabel zerdrücken.",
+      "Gurke in Streifen schneiden, Karotten raspeln, Feta zerbröseln.",
+      "Wraps mit Hummus bestreichen, Gemüse und Feta drauf, fest einrollen. Hält eingewickelt gut bis zum Mittag."],
+  },
+  {
+    id: "gnocchi-spinat-feta", name: "Gnocchi-Pfanne mit Spinat und Feta", minuten: 15, portionen: 2,
+    tags: ["Pfanne", "Schnell"],
+    zutaten: ["500 g Gnocchi", "1 EL Rapsöl", "1 Zwiebeln", "1 Zehe Knoblauch", "450 g TK-Blattspinat", "200 g Feta"],
+    schritte: ["Gnocchi ungekocht in Öl 5–6 Min goldbraun braten.",
+      "Zwiebel und Knoblauch kurz mitbraten, Spinat dazu und mit Deckel 4 Min auftauen lassen, dann offen einköcheln.",
+      "Feta drüberbröseln, kurz anschmelzen lassen, pfeffern."],
+  },
+  {
+    id: "ofen-feta-pasta", name: "Ofen-Feta-Pasta mit Kirschtomaten", minuten: 25, portionen: 2,
+    tags: ["Ofen", "Pasta"],
+    zutaten: ["200 g Feta", "500 g Kirschtomaten", "2 EL Olivenöl", "2 Zehe Knoblauch", "1 TL Italienische Kräuter",
+      "1 Prise Chiliflocken", "Beilage: Vollkornpenne"],
+    schritte: ["Ofen auf 200 °C vorheizen.",
+      "Tomaten in eine Auflaufform geben, den Feta-Block in die Mitte legen, Öl, Knoblauch, Kräuter und Chili drüber. 20 Min backen.",
+      "In der Zeit die Nudeln kochen, eine Tasse Nudelwasser aufheben.",
+      "Feta und Tomaten mit der Gabel zerdrücken und verrühren, Nudeln und etwas Nudelwasser unterheben."],
+  },
+  {
+    id: "pellkartoffeln-quark", name: "Pellkartoffeln mit Kräuterquark", minuten: 25, portionen: 2,
+    tags: ["Sport"],
+    zutaten: ["Beilage: Kartoffeln", "500 g Magerquark", "100 ml Milch", "2 EL TK-Kräuter", "½ Gurke",
+      "1 Zwiebeln (optional)"],
+    schritte: ["Kartoffeln mit Schale in Salzwasser ca. 20 Min kochen.",
+      "Quark mit Milch glatt rühren, Kräuter, fein gewürfelte Gurke (und Zwiebel) unterrühren, mit Salz und Pfeffer abschmecken.",
+      "Kartoffeln pellen oder mit Schale essen, Quark dazu."],
+  },
 ];
 
 // Die vier Wochen aus dem ursprünglichen Plan. Pro Tag [Mittag, Abend];
@@ -612,4 +764,15 @@ const BILDER = {
   "spinat-feta-pfannkuchen": { autor: "Karen and Brad Emerson", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Spinach_crepes_(3236762733).jpg" },
   "tofu-pfanne": { autor: "Miscellaneous contributor", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Tofu_stir-fry.jpeg" },
   "wrap-pizza": { autor: "HaJunkiyada", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Homemade_tortilla_pizza.jpg" },
+  "erbsen-quark-pasta": { autor: "Charles Haynes", lizenz: "CC BY-SA 2.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/2.0", seite: "https://commons.wikimedia.org/wiki/File:Lemon_Pasta_with_Peas_(11667881).jpg" },
+  "gnocchi-spinat-feta": { autor: "FakirNL", lizenz: "CC BY-SA 3.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/3.0", seite: "https://commons.wikimedia.org/wiki/File:Gnocchi_Verde.jpg" },
+  "hummus-wraps": { autor: "Jennifer from Vancouver, Canada", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Vegetable_and_Basil-Garlic_Hummus_Wrap_(4800115998).jpg" },
+  "mujaddara": { autor: "Bazel", lizenz: "CC BY-SA 3.0", lizenzUrl: "http://creativecommons.org/licenses/by-sa/3.0/", seite: "https://commons.wikimedia.org/wiki/File:Mujaddara.jpg" },
+  "nudelsuppe-ei": { autor: "Guilhem Vellut from Annecy, France", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Ajitama_egg_@_Vegetarian_ramen_@_Yatta_!_Ramen_@_Annecy-le-Vieux_(49021249312).jpg" },
+  "ofen-feta-pasta": { autor: "Delicious Adventures", lizenz: "CC BY 3.0", lizenzUrl: "https://creativecommons.org/licenses/by/3.0", seite: "https://commons.wikimedia.org/wiki/File:Baked_feta_pasta.jpg" },
+  "pasta-e-ceci": { autor: "spurekar", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Pasta_e_ceci_(49671162847).jpg" },
+  "pellkartoffeln-quark": { autor: "abnehmen.net", lizenz: "CC BY-SA 2.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/2.0", seite: "https://commons.wikimedia.org/wiki/File:Kartoffeln-quark.jpg" },
+  "spinat-kartoffeln-ei": { autor: "Xipolis", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:W%C3%BCrzspinat,_Salzkartoffeln_und_Spiegeleier.jpg" },
+  "tofu-ruehrei": { autor: "Bart Everson", lizenz: "CC BY 2.0", lizenzUrl: "https://creativecommons.org/licenses/by/2.0", seite: "https://commons.wikimedia.org/wiki/File:Tofu_Scramble_in_New_Orleans.jpg" },
+  "tomaten-bohnen-suppe": { autor: "Gillgaramond", lizenz: "CC BY-SA 4.0", lizenzUrl: "https://creativecommons.org/licenses/by-sa/4.0", seite: "https://commons.wikimedia.org/wiki/File:Bean_soup_with_tomatoes_and_red_peppers.jpeg" },
 };
